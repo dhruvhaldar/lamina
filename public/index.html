@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lamina - Composite Design Tool</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Lamina</h1>
+        <p>Composite Laminate Design & Analysis</p>
+
+        <div class="panel">
+            <h2>Material Properties</h2>
+            <div class="input-grid">
+                <label>E1 (Pa): <input type="number" id="E1" value="140e9"></label>
+                <label>E2 (Pa): <input type="number" id="E2" value="10e9"></label>
+                <label>G12 (Pa): <input type="number" id="G12" value="5e9"></label>
+                <label>v12: <input type="number" id="v12" value="0.3"></label>
+                <label>Xt (Pa): <input type="number" id="Xt" value="1500e6"></label>
+                <label>Xc (Pa): <input type="number" id="Xc" value="1200e6"></label>
+                <label>Yt (Pa): <input type="number" id="Yt" value="50e6"></label>
+                <label>Yc (Pa): <input type="number" id="Yc" value="250e6"></label>
+                <label>S (Pa): <input type="number" id="S" value="70e6"></label>
+            </div>
+        </div>
+
+        <div class="panel">
+            <h2>Laminate Definition</h2>
+            <div class="input-row">
+                <label>Stacking Sequence (deg): <input type="text" id="stack" value="0, 45, -45, 90"></label>
+                <label>Symmetry: <input type="checkbox" id="symmetry" checked></label>
+                <label>Ply Thickness (m): <input type="number" id="thickness" value="0.000125"></label>
+            </div>
+            <button onclick="calculate()">Calculate Properties</button>
+            <button onclick="plotPolar()">Plot Stiffness Polar</button>
+            <button onclick="plotEnvelope()">Plot Failure Envelope</button>
+        </div>
+
+        <div class="results">
+            <div class="panel" id="properties-panel">
+                <h3>Engineering Constants</h3>
+                <pre id="constants-output"></pre>
+                <h3>ABD Matrix</h3>
+                <pre id="abd-output"></pre>
+            </div>
+
+            <div class="panel">
+                <h3>Stiffness Polar Plot (Ex)</h3>
+                <div id="polar-plot"></div>
+            </div>
+
+            <div class="panel">
+                <h3>Failure Envelope (Tsai-Wu)</h3>
+                <div id="envelope-plot"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="polar_plot.js"></script>
+    <script src="failure_envelope.js"></script>
+    <script>
+        async function getLaminateData() {
+            const E1 = parseFloat(document.getElementById('E1').value);
+            const E2 = parseFloat(document.getElementById('E2').value);
+            const G12 = parseFloat(document.getElementById('G12').value);
+            const v12 = parseFloat(document.getElementById('v12').value);
+
+            const stackStr = document.getElementById('stack').value;
+            const stack = stackStr.split(',').map(s => parseFloat(s.trim()));
+            const symmetry = document.getElementById('symmetry').checked;
+            const thickness = parseFloat(document.getElementById('thickness').value);
+
+            return {
+                material: { E1, E2, G12, v12 },
+                stack,
+                symmetry,
+                thickness
+            };
+        }
+
+        async function getLimits() {
+             return {
+                xt: parseFloat(document.getElementById('Xt').value),
+                xc: parseFloat(document.getElementById('Xc').value),
+                yt: parseFloat(document.getElementById('Yt').value),
+                yc: parseFloat(document.getElementById('Yc').value),
+                s: parseFloat(document.getElementById('S').value)
+             };
+        }
+
+        async function calculate() {
+            const data = await getLaminateData();
+            const response = await fetch('/api/calculate', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            });
+            const result = await response.json();
+
+            document.getElementById('constants-output').textContent = JSON.stringify(result.properties, null, 2);
+            document.getElementById('abd-output').textContent = JSON.stringify(result.ABD, null, 2);
+        }
+
+        async function plotPolar() {
+            const data = await getLaminateData();
+            const response = await fetch('/api/polar', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            });
+            const result = await response.json();
+            drawPolar(result);
+        }
+
+        async function plotEnvelope() {
+            const lamData = await getLaminateData();
+            const limits = await getLimits();
+            const response = await fetch('/api/failure', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({laminate: lamData, limits})
+            });
+            const result = await response.json();
+            drawEnvelope(result);
+        }
+    </script>
+</body>
+</html>
