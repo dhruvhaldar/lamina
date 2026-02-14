@@ -83,7 +83,13 @@ def read_root():
 
 @app.get("/{filename}")
 def read_file(filename: str):
-    path = f"public/{filename}"
-    if os.path.exists(path):
-        return FileResponse(path)
+    base_dir = os.path.abspath("public")
+    requested_path = os.path.abspath(os.path.join(base_dir, filename))
+
+    # Verify the path is within the public directory
+    if not requested_path.startswith(os.path.join(base_dir, "")):
+        return {"error": "Access denied"}
+
+    if os.path.exists(requested_path) and os.path.isfile(requested_path):
+        return FileResponse(requested_path)
     return {"error": "File not found"}
