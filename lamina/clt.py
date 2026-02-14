@@ -2,6 +2,32 @@ import numpy as np
 import matplotlib.pyplot as plt
 from lamina.materials import Material
 
+def _transform_stiffness(Q, angle_deg):
+    """
+    Transforms stiffness matrix Q by rotating coordinate system by angle_deg.
+    Q' = T_sigma @ Q @ T_epsilon_inv
+    """
+    theta = np.radians(angle_deg)
+    c = np.cos(theta)
+    s = np.sin(theta)
+
+    # T_sigma (stress transformation)
+    T_sigma = np.array([
+        [c**2, s**2, 2*c*s],
+        [s**2, c**2, -2*c*s],
+        [-c*s, c*s, c**2-s**2]
+    ])
+
+    # T_epsilon_inv (strain transformation inverse)
+    # T_epsilon_inv = T_epsilon(-theta)
+    T_epsilon_inv = np.array([
+        [c**2, s**2, -c*s],
+        [s**2, c**2, c*s],
+        [2*c*s, -2*c*s, c**2-s**2]
+    ])
+
+    return T_sigma @ Q @ T_epsilon_inv
+
 class PolarResult:
     def __init__(self, data):
         self.data = data # list of dicts
@@ -123,20 +149,40 @@ class Laminate:
         angles = np.arange(0, 360, step)
         results = []
 
-        # Use current full stack as base
-        base_stack = self.stack
+        # Calculate properties by rotating the ABD matrix
+        # This is much faster than re-creating Laminate objects
+        h = self.total_thickness
 
         for phi in angles:
-            rotated_stack = [angle + phi for angle in base_stack]
-            # Create a new laminate with the rotated stack
-            # Since base_stack is already fully expanded (symmetric if needed), we set symmetry=False
-            lam = Laminate(self.material, rotated_stack, self.ply_thickness, symmetry=False)
-            props = lam.properties()
+            # Rotate A, B, D matrices
+            # Rotating coordinate system by phi is equivalent to finding properties in direction phi
+            A_prime = _transform_stiffness(self.A, phi)
+            B_prime = _transform_stiffness(self.B, phi)
+            D_prime = _transform_stiffness(self.D, phi)
+
+            # Assemble rotated ABD
+            ABD_prime = np.vstack([
+                np.hstack([A_prime, B_prime]),
+                np.hstack([B_prime, D_prime])
+            ])
+
+            # Invert to get compliance
+            try:
+                abd_prime = np.linalg.inv(ABD_prime)
+            except np.linalg.LinAlgError:
+                abd_prime = np.zeros_like(ABD_prime)
+
+            # Calculate engineering constants from compliance
+            a = abd_prime[:3, :3]
+            Ex = 1 / (h * a[0, 0]) if a[0, 0] != 0 else 0
+            Ey = 1 / (h * a[1, 1]) if a[1, 1] != 0 else 0
+            Gxy = 1 / (h * a[2, 2]) if a[2, 2] != 0 else 0
+
             results.append({
                 "angle": float(phi),
-                "Ex": props["Ex"],
-                "Ey": props["Ey"],
-                "Gxy": props["Gxy"]
+                "Ex": Ex,
+                "Ey": Ey,
+                "Gxy": Gxy
             })
 
         return PolarResult(results)
