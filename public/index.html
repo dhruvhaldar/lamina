@@ -34,9 +34,9 @@
                 <label>Symmetry: <input type="checkbox" id="symmetry" checked></label>
                 <label>Ply Thickness (m): <input type="number" id="thickness" value="0.000125"></label>
             </div>
-            <button onclick="calculate()">Calculate Properties</button>
-            <button onclick="plotPolar()">Plot Stiffness Polar</button>
-            <button onclick="plotEnvelope()">Plot Failure Envelope</button>
+            <button onclick="calculate(this)">Calculate Properties</button>
+            <button onclick="plotPolar(this)">Plot Stiffness Polar</button>
+            <button onclick="plotEnvelope(this)">Plot Failure Envelope</button>
         </div>
 
         <div class="results">
@@ -62,6 +62,19 @@
     <script src="polar_plot.js"></script>
     <script src="failure_envelope.js"></script>
     <script>
+        function setLoading(btn, isLoading) {
+            if (isLoading) {
+                btn.setAttribute('disabled', 'true');
+                btn.setAttribute('aria-busy', 'true');
+                btn.dataset.originalText = btn.innerText;
+                btn.innerHTML = '<span class="spinner"></span> Processing...';
+            } else {
+                btn.removeAttribute('disabled');
+                btn.setAttribute('aria-busy', 'false');
+                btn.innerText = btn.dataset.originalText;
+            }
+        }
+
         async function getLaminateData() {
             const E1 = parseFloat(document.getElementById('E1').value);
             const E2 = parseFloat(document.getElementById('E2').value);
@@ -91,40 +104,67 @@
              };
         }
 
-        async function calculate() {
-            const data = await getLaminateData();
-            const response = await fetch('/api/calculate', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(data)
-            });
-            const result = await response.json();
+        async function calculate(btn) {
+            setLoading(btn, true);
+            try {
+                const data = await getLaminateData();
+                const response = await fetch('/api/calculate', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(data)
+                });
+                if (!response.ok) throw new Error('Network response was not ok');
+                const result = await response.json();
 
-            document.getElementById('constants-output').textContent = JSON.stringify(result.properties, null, 2);
-            document.getElementById('abd-output').textContent = JSON.stringify(result.ABD, null, 2);
+                document.getElementById('constants-output').textContent = JSON.stringify(result.properties, null, 2);
+                document.getElementById('abd-output').textContent = JSON.stringify(result.ABD, null, 2);
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to calculate properties. Check inputs.');
+            } finally {
+                setLoading(btn, false);
+            }
         }
 
-        async function plotPolar() {
-            const data = await getLaminateData();
-            const response = await fetch('/api/polar', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(data)
-            });
-            const result = await response.json();
-            drawPolar(result);
+        async function plotPolar(btn) {
+            setLoading(btn, true);
+            try {
+                const data = await getLaminateData();
+                const response = await fetch('/api/polar', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(data)
+                });
+                if (!response.ok) throw new Error('Network response was not ok');
+                const result = await response.json();
+                drawPolar(result);
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to plot stiffness polar. Check inputs.');
+            } finally {
+                setLoading(btn, false);
+            }
         }
 
-        async function plotEnvelope() {
-            const lamData = await getLaminateData();
-            const limits = await getLimits();
-            const response = await fetch('/api/failure', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({laminate: lamData, limits})
-            });
-            const result = await response.json();
-            drawEnvelope(result);
+        async function plotEnvelope(btn) {
+            setLoading(btn, true);
+            try {
+                const lamData = await getLaminateData();
+                const limits = await getLimits();
+                const response = await fetch('/api/failure', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({laminate: lamData, limits})
+                });
+                if (!response.ok) throw new Error('Network response was not ok');
+                const result = await response.json();
+                drawEnvelope(result);
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to plot failure envelope. Check inputs.');
+            } finally {
+                setLoading(btn, false);
+            }
         }
     </script>
 </body>
