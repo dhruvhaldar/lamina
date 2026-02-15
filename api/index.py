@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator, model_validator
 from typing import List, Dict, Optional
 import os
 
@@ -19,11 +19,46 @@ class MaterialModel(BaseModel):
     v12: float
     name: str = "Custom"
 
+    @field_validator('E1', 'E2', 'G12')
+    @classmethod
+    def check_positive(cls, v: float) -> float:
+        if v <= 0:
+            raise ValueError('Must be positive')
+        return v
+
+    @model_validator(mode='after')
+    def check_poisson(self) -> 'MaterialModel':
+        # Check thermodynamic stability condition: v12*v21 < 1
+        # v21 = v12 * E2 / E1
+        # so v12^2 * E2 / E1 < 1
+        # Also catch potential division by zero if E1 is somehow 0 (caught by check_positive, but good to be safe)
+        if self.E1 > 0:
+            v21 = self.v12 * self.E2 / self.E1
+            if self.v12 * v21 >= 1.0:
+                raise ValueError('Invalid Poisson ratio: leads to unstable material (v12*v21 >= 1)')
+        return self
+
 class LaminateModel(BaseModel):
     material: MaterialModel
     stack: List[float]
     symmetry: bool = False
     thickness: float = 0.125e-3
+
+    @field_validator('stack')
+    @classmethod
+    def check_stack_size(cls, v: List[float]) -> List[float]:
+        if len(v) > 200:
+             raise ValueError('Stack too large (max 200 plies)')
+        if len(v) == 0:
+             raise ValueError('Stack cannot be empty')
+        return v
+
+    @field_validator('thickness')
+    @classmethod
+    def check_thickness(cls, v: float) -> float:
+        if v <= 0:
+             raise ValueError('Thickness must be positive')
+        return v
 
 class LimitsModel(BaseModel):
     xt: float
