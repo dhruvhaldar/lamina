@@ -4,3 +4,7 @@
 ## 2025-02-14 - Async Operation Feedback
 **Learning:** Users lack visibility into long-running calculations (1-2s), leading to potential double submissions.
 **Action:** Implement a reusable `setLoading` helper for all async buttons to manage disabled state, aria-busy, and visual spinner.
+
+## 2026-02-15 - Error Feedback
+**Learning:** Generic `alert()` messages ("Check inputs") frustrate users when backend provides specific validation details (e.g. "E1 must be positive").
+**Action:** Replace `alert()` with a Toast notification system that parses and displays specific backend validation errors inline.

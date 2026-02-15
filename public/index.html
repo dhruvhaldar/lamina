@@ -59,9 +59,26 @@
         </div>
     </div>
 
+    <div id="toast-container"></div>
     <script src="polar_plot.js"></script>
     <script src="failure_envelope.js"></script>
     <script>
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.role = type === 'error' ? 'alert' : 'status';
+            toast.textContent = message;
+
+            container.appendChild(toast);
+
+            // Remove after 5 seconds
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 5000);
+        }
+
         function setLoading(btn, isLoading) {
             if (isLoading) {
                 btn.setAttribute('disabled', 'true');
@@ -104,6 +121,22 @@
              };
         }
 
+        async function handleApiError(response) {
+            const errData = await response.json().catch(() => ({}));
+            let msg = 'Server error';
+            if (errData.detail) {
+                if (Array.isArray(errData.detail)) {
+                    msg = errData.detail.map(e => {
+                        const field = e.loc ? e.loc[e.loc.length - 1] : 'Error';
+                        return `${field}: ${e.msg.replace('Value error, ', '')}`;
+                    }).join('\n');
+                } else {
+                    msg = errData.detail;
+                }
+            }
+            throw new Error(msg);
+        }
+
         async function calculate(btn) {
             setLoading(btn, true);
             try {
@@ -113,14 +146,19 @@
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify(data)
                 });
-                if (!response.ok) throw new Error('Network response was not ok');
+
+                if (!response.ok) {
+                    await handleApiError(response);
+                }
+
                 const result = await response.json();
 
                 document.getElementById('constants-output').textContent = JSON.stringify(result.properties, null, 2);
                 document.getElementById('abd-output').textContent = JSON.stringify(result.ABD, null, 2);
+                showToast('Calculation complete', 'success');
             } catch (error) {
                 console.error('Error:', error);
-                alert('Failed to calculate properties. Check inputs.');
+                showToast(error.message, 'error');
             } finally {
                 setLoading(btn, false);
             }
@@ -135,12 +173,17 @@
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify(data)
                 });
-                if (!response.ok) throw new Error('Network response was not ok');
+
+                if (!response.ok) {
+                    await handleApiError(response);
+                }
+
                 const result = await response.json();
                 drawPolar(result);
+                showToast('Stiffness polar plotted', 'success');
             } catch (error) {
                 console.error('Error:', error);
-                alert('Failed to plot stiffness polar. Check inputs.');
+                showToast(error.message, 'error');
             } finally {
                 setLoading(btn, false);
             }
@@ -156,12 +199,17 @@
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({laminate: lamData, limits})
                 });
-                if (!response.ok) throw new Error('Network response was not ok');
+
+                if (!response.ok) {
+                    await handleApiError(response);
+                }
+
                 const result = await response.json();
                 drawEnvelope(result);
+                showToast('Failure envelope plotted', 'success');
             } catch (error) {
                 console.error('Error:', error);
-                alert('Failed to plot failure envelope. Check inputs.');
+                showToast(error.message, 'error');
             } finally {
                 setLoading(btn, false);
             }
