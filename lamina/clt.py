@@ -69,18 +69,25 @@ class Laminate:
 
     def update(self):
         self.z_coords = self._calculate_z_coords()
-        self.A = np.zeros((3, 3))
-        self.B = np.zeros((3, 3))
-        self.D = np.zeros((3, 3))
 
-        for i, angle in enumerate(self.stack):
-            Q_bar = self._get_Q_bar(angle)
-            z_k = self.z_coords[i+1]
-            z_k_1 = self.z_coords[i]
+        # Vectorized calculation for performance
+        # 1. Calculate Q_bar for all plies at once
+        angles = np.array(self.stack)
+        Q_bars = self._get_Q_bar(angles) # Returns (3, 3, n_plies)
 
-            self.A += Q_bar * (z_k - z_k_1)
-            self.B += 0.5 * Q_bar * (z_k**2 - z_k_1**2)
-            self.D += (1/3) * Q_bar * (z_k**3 - z_k_1**3)
+        # 2. Calculate thickness terms
+        zk = self.z_coords[1:]
+        zk_1 = self.z_coords[:-1]
+
+        h = zk - zk_1
+        h2 = zk**2 - zk_1**2
+        h3 = zk**3 - zk_1**3
+
+        # 3. Sum over plies (axis 2)
+        # Broadcasting: (3, 3, N) * (N,) -> (3, 3, N)
+        self.A = np.sum(Q_bars * h, axis=2)
+        self.B = 0.5 * np.sum(Q_bars * h2, axis=2)
+        self.D = (1/3) * np.sum(Q_bars * h3, axis=2)
 
         # ABD Matrix
         self.ABD = np.vstack([

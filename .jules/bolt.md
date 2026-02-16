@@ -5,3 +5,7 @@
 ## 2026-02-14 - [Failure Envelope Vectorization]
 **Learning:** Calculating failure envelopes by looping over angles and plies in Python is extremely slow (O(Angles * Plies)). Vectorizing the stress transformation and failure criteria evaluation across all angles at once yields massive speedups (~85x).
 **Action:** Always vectorize laminate analysis across the sweep parameter (angles, loads) instead of looping.
+
+## 2026-02-16 - [Laminate Creation Vectorization]
+**Learning:** `Laminate` creation (specifically the `update` method calculating ABD matrices) using an explicit Python loop over plies is a bottleneck in optimization algorithms that create thousands of laminates. Vectorizing the ply integration reduced creation time by ~54% (0.37ms -> 0.17ms).
+**Action:** Vectorize matrix calculations over the ply dimension using numpy broadcasting when integrating stiffness properties.
