@@ -8,3 +8,7 @@
 ## 2026-02-15 - Error Feedback
 **Learning:** Generic `alert()` messages ("Check inputs") frustrate users when backend provides specific validation details (e.g. "E1 must be positive").
 **Action:** Replace `alert()` with a Toast notification system that parses and displays specific backend validation errors inline.
+
+## 2026-02-16 - Technical Context
+**Learning:** Users struggle with abbreviated engineering terms (`E1`, `G12`) without inline explanations, leading to confusion.
+**Action:** Use `title` attributes on labels to provide full descriptive names for technical parameters without cluttering the UI.
