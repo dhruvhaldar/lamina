@@ -67,6 +67,13 @@ class LimitsModel(BaseModel):
     yc: float
     s: float
 
+    @field_validator('xt', 'xc', 'yt', 'yc', 's')
+    @classmethod
+    def check_positive(cls, v: float) -> float:
+        if v <= 0:
+            raise ValueError('Must be positive')
+        return v
+
 class FailureRequest(BaseModel):
     laminate: LaminateModel
     limits: LimitsModel
@@ -101,7 +108,7 @@ def polar(data: LaminateModel):
 def failure(req: FailureRequest):
     lam = create_laminate(req.laminate)
     # Using Tsai-Wu
-    envelope = FailureCriterion.tsai_wu(lam, req.limits.dict())
+    envelope = FailureCriterion.tsai_wu(lam, req.limits.model_dump())
     return envelope.data
 
 # Serve static files
