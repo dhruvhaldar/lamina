@@ -15,15 +15,15 @@
         <div class="panel">
             <h2>Material Properties</h2>
             <div class="input-grid">
-                <label>E1 (Pa): <input type="number" id="E1" value="140e9"></label>
-                <label>E2 (Pa): <input type="number" id="E2" value="10e9"></label>
-                <label>G12 (Pa): <input type="number" id="G12" value="5e9"></label>
-                <label>v12: <input type="number" id="v12" value="0.3"></label>
-                <label>Xt (Pa): <input type="number" id="Xt" value="1500e6"></label>
-                <label>Xc (Pa): <input type="number" id="Xc" value="1200e6"></label>
-                <label>Yt (Pa): <input type="number" id="Yt" value="50e6"></label>
-                <label>Yc (Pa): <input type="number" id="Yc" value="250e6"></label>
-                <label>S (Pa): <input type="number" id="S" value="70e6"></label>
+                <label title="Longitudinal Young's Modulus">E1 (Pa): <input type="number" id="E1" value="140e9"></label>
+                <label title="Transverse Young's Modulus">E2 (Pa): <input type="number" id="E2" value="10e9"></label>
+                <label title="In-plane Shear Modulus">G12 (Pa): <input type="number" id="G12" value="5e9"></label>
+                <label title="Major Poisson's Ratio">v12: <input type="number" id="v12" value="0.3"></label>
+                <label title="Longitudinal Tensile Strength">Xt (Pa): <input type="number" id="Xt" value="1500e6"></label>
+                <label title="Longitudinal Compressive Strength">Xc (Pa): <input type="number" id="Xc" value="1200e6"></label>
+                <label title="Transverse Tensile Strength">Yt (Pa): <input type="number" id="Yt" value="50e6"></label>
+                <label title="Transverse Compressive Strength">Yc (Pa): <input type="number" id="Yc" value="250e6"></label>
+                <label title="In-plane Shear Strength">S (Pa): <input type="number" id="S" value="70e6"></label>
             </div>
         </div>
 
@@ -42,7 +42,7 @@
         <div class="results">
             <div class="panel" id="properties-panel">
                 <h3>Engineering Constants</h3>
-                <pre id="constants-output"></pre>
+                <div id="constants-output"></div>
                 <h3>ABD Matrix</h3>
                 <pre id="abd-output"></pre>
             </div>
@@ -137,6 +137,32 @@
             throw new Error(msg);
         }
 
+        function formatEngineeringConstants(props) {
+            const items = [
+                { label: 'Ex', value: props.Ex, unit: 'Pa', convert: v => (v/1e9).toFixed(2) + ' GPa', title: "Longitudinal Modulus" },
+                { label: 'Ey', value: props.Ey, unit: 'Pa', convert: v => (v/1e9).toFixed(2) + ' GPa', title: "Transverse Modulus" },
+                { label: 'Gxy', value: props.Gxy, unit: 'Pa', convert: v => (v/1e9).toFixed(2) + ' GPa', title: "Shear Modulus" },
+                { label: 'vxy', value: props.vxy, unit: '', convert: v => v.toFixed(3), title: "Poisson's Ratio" }
+            ];
+
+            return `
+                <div class="input-grid" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));">
+                    ${items.map(item => `
+                        <div class="result-item" title="${item.title}">
+                            <strong>${item.label}:</strong> ${item.convert(item.value)}
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function formatMatrix(matrix) {
+            // matrix is 6x6 array (list of lists)
+            return matrix.map(row =>
+                row.map(val => val.toExponential(2).padStart(11)).join('  ')
+            ).join('\n');
+        }
+
         async function calculate(btn) {
             setLoading(btn, true);
             try {
@@ -153,8 +179,8 @@
 
                 const result = await response.json();
 
-                document.getElementById('constants-output').textContent = JSON.stringify(result.properties, null, 2);
-                document.getElementById('abd-output').textContent = JSON.stringify(result.ABD, null, 2);
+                document.getElementById('constants-output').innerHTML = formatEngineeringConstants(result.properties);
+                document.getElementById('abd-output').textContent = formatMatrix(result.ABD);
                 showToast('Calculation complete', 'success');
             } catch (error) {
                 console.error('Error:', error);
