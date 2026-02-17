@@ -9,3 +9,7 @@
 ## 2026-02-16 - [Laminate Creation Vectorization]
 **Learning:** `Laminate` creation (specifically the `update` method calculating ABD matrices) using an explicit Python loop over plies is a bottleneck in optimization algorithms that create thousands of laminates. Vectorizing the ply integration reduced creation time by ~54% (0.37ms -> 0.17ms).
 **Action:** Vectorize matrix calculations over the ply dimension using numpy broadcasting when integrating stiffness properties.
+
+## 2026-02-27 - [Polar Stiffness Vectorization]
+**Learning:** Looping over angles in Python to calculate rotated stiffness properties (`polar_stiffness`) is slow (~30ms for 360 angles). Vectorizing the rotation matrix construction and matrix multiplication using NumPy broadcasting reduces this to ~3ms (~10x speedup).
+**Action:** Vectorize geometric transformations of stiffness matrices over the angle dimension using `(N, 3, 3)` stacks.

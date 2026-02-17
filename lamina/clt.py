@@ -6,27 +6,54 @@ def _transform_stiffness(Q, angle_deg):
     """
     Transforms stiffness matrix Q by rotating coordinate system by angle_deg.
     Q' = T_sigma @ Q @ T_epsilon_inv
+    Supports angle_deg as scalar or numpy array.
     """
     theta = np.radians(angle_deg)
     c = np.cos(theta)
     s = np.sin(theta)
 
-    # T_sigma (stress transformation)
-    T_sigma = np.array([
-        [c**2, s**2, 2*c*s],
-        [s**2, c**2, -2*c*s],
-        [-c*s, c*s, c**2-s**2]
-    ])
+    if np.ndim(theta) == 0:
+        # T_sigma (stress transformation)
+        T_sigma = np.array([
+            [c**2, s**2, 2*c*s],
+            [s**2, c**2, -2*c*s],
+            [-c*s, c*s, c**2-s**2]
+        ])
 
-    # T_epsilon_inv (strain transformation inverse)
-    # T_epsilon_inv = T_epsilon(-theta)
-    T_epsilon_inv = np.array([
-        [c**2, s**2, -c*s],
-        [s**2, c**2, c*s],
-        [2*c*s, -2*c*s, c**2-s**2]
-    ])
+        # T_epsilon_inv (strain transformation inverse)
+        T_epsilon_inv = np.array([
+            [c**2, s**2, -c*s],
+            [s**2, c**2, c*s],
+            [2*c*s, -2*c*s, c**2-s**2]
+        ])
+        return T_sigma @ Q @ T_epsilon_inv
 
-    return T_sigma @ Q @ T_epsilon_inv
+    else:
+        # Vectorized case: theta is (N,)
+        c2 = c**2
+        s2 = s**2
+        cs = c*s
+
+        # Construct T_sigma as (N, 3, 3)
+        # We construct (3, 3, N) first then transpose
+        T_sigma_T = np.array([
+            [c2, s2, 2*cs],
+            [s2, c2, -2*cs],
+            [-cs, cs, c2-s2]
+        ])
+        T_sigma = T_sigma_T.transpose(2, 0, 1)
+
+        # Construct T_epsilon_inv as (N, 3, 3)
+        T_epsilon_inv_T = np.array([
+            [c2, s2, -cs],
+            [s2, c2, cs],
+            [2*cs, -2*cs, c2-s2]
+        ])
+        T_epsilon_inv = T_epsilon_inv_T.transpose(2, 0, 1)
+
+        # Broadcasting: (N, 3, 3) @ (3, 3) -> (N, 3, 3)
+        # (N, 3, 3) @ (N, 3, 3) -> (N, 3, 3)
+        return T_sigma @ Q @ T_epsilon_inv
 
 class PolarResult:
     def __init__(self, data):
@@ -154,42 +181,58 @@ class Laminate:
 
     def polar_stiffness(self, step=10):
         angles = np.arange(0, 360, step)
-        results = []
-
-        # Calculate properties by rotating the ABD matrix
-        # This is much faster than re-creating Laminate objects
         h = self.total_thickness
 
-        for phi in angles:
-            # Rotate A, B, D matrices
-            # Rotating coordinate system by phi is equivalent to finding properties in direction phi
-            A_prime = _transform_stiffness(self.A, phi)
-            B_prime = _transform_stiffness(self.B, phi)
-            D_prime = _transform_stiffness(self.D, phi)
+        # Vectorized transformation: returns (N, 3, 3)
+        A_prime = _transform_stiffness(self.A, angles)
+        B_prime = _transform_stiffness(self.B, angles)
+        D_prime = _transform_stiffness(self.D, angles)
 
-            # Assemble rotated ABD
-            ABD_prime = np.vstack([
-                np.hstack([A_prime, B_prime]),
-                np.hstack([B_prime, D_prime])
-            ])
+        # Assemble rotated ABD: (N, 6, 6)
+        # Build block matrix for each angle
+        # concatenate along axis 2 (columns) then axis 1 (rows)
+        # Note: input shapes are (N, 3, 3)
+        top = np.concatenate([A_prime, B_prime], axis=2)
+        bottom = np.concatenate([B_prime, D_prime], axis=2)
+        ABD_prime = np.concatenate([top, bottom], axis=1)
 
-            # Invert to get compliance
-            try:
-                abd_prime = np.linalg.inv(ABD_prime)
-            except np.linalg.LinAlgError:
-                abd_prime = np.zeros_like(ABD_prime)
+        # Invert to get compliance: (N, 6, 6)
+        try:
+            abd_prime = np.linalg.inv(ABD_prime)
+        except np.linalg.LinAlgError:
+            abd_prime = np.zeros_like(ABD_prime)
 
-            # Calculate engineering constants from compliance
-            a = abd_prime[:3, :3]
-            Ex = 1 / (h * a[0, 0]) if a[0, 0] != 0 else 0
-            Ey = 1 / (h * a[1, 1]) if a[1, 1] != 0 else 0
-            Gxy = 1 / (h * a[2, 2]) if a[2, 2] != 0 else 0
+        # Calculate engineering constants from compliance
+        # a is top-left 3x3 block of abd_prime
+        # abd_prime shape is (N, 6, 6)
+        # We need elements (N,)
 
+        a00 = abd_prime[:, 0, 0]
+        a11 = abd_prime[:, 1, 1]
+        a22 = abd_prime[:, 2, 2]
+
+        # Initialize arrays
+        Ex = np.zeros_like(a00)
+        Ey = np.zeros_like(a11)
+        Gxy = np.zeros_like(a22)
+
+        # Vectorized division with zero check
+        mask00 = a00 != 0
+        Ex[mask00] = 1 / (h * a00[mask00])
+
+        mask11 = a11 != 0
+        Ey[mask11] = 1 / (h * a11[mask11])
+
+        mask22 = a22 != 0
+        Gxy[mask22] = 1 / (h * a22[mask22])
+
+        results = []
+        for i, angle in enumerate(angles):
             results.append({
-                "angle": float(phi),
-                "Ex": Ex,
-                "Ey": Ey,
-                "Gxy": Gxy
+                "angle": float(angle),
+                "Ex": float(Ex[i]),
+                "Ey": float(Ey[i]),
+                "Gxy": float(Gxy[i])
             })
 
         return PolarResult(results)
