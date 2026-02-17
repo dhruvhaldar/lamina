@@ -125,8 +125,8 @@ def read_root():
 
 @app.get("/{filename}")
 def read_file(filename: str):
-    base_dir = os.path.abspath("public")
-    requested_path = os.path.abspath(os.path.join(base_dir, filename))
+    base_dir = os.path.realpath("public")
+    requested_path = os.path.realpath(os.path.join(base_dir, filename))
 
     # Verify the path is within the public directory
     if not requested_path.startswith(os.path.join(base_dir, "")):
