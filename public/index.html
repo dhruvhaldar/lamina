@@ -30,7 +30,11 @@
         <div class="panel">
             <h2>Laminate Definition</h2>
             <div class="input-row">
-                <label>Stacking Sequence (deg): <input type="text" id="stack" value="0, 45, -45, 90"></label>
+                <label>
+                    Stacking Sequence (deg):
+                    <input type="text" id="stack" value="0, 45, -45, 90" aria-describedby="stack-helper">
+                    <span id="stack-helper" class="helper-text">Format: 0, 45, -45, 90</span>
+                </label>
                 <label>Symmetry: <input type="checkbox" id="symmetry" checked></label>
                 <label>Ply Thickness (m): <input type="number" id="thickness" value="0.000125"></label>
             </div>

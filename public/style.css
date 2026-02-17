@@ -142,3 +142,18 @@ button:disabled {
         opacity: 1;
     }
 }
+
+/* Helper Text */
+.helper-text {
+    display: block;
+    font-weight: normal;
+    font-size: 0.85em;
+    color: #666;
+    margin-top: 4px;
+}
+
+/* Accessibility Focus States */
+input:focus-visible, button:focus-visible {
+    outline: 2px solid #3498db;
+    outline-offset: 2px;
+}
