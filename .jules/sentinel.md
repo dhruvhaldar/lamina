@@ -12,3 +12,8 @@
 **Vulnerability:** `os.path.abspath` was used to validate paths, but it does not resolve symbolic links. This allowed accessing files outside the intended directory if a symlink existed within it.
 **Learning:** `os.path.abspath` normalizes `..` but preserves symlinks. `os.path.realpath` is required to resolve symlinks and ensure the *actual* file location is within the allowed directory.
 **Prevention:** Always use `os.path.realpath` when validating file paths to prevent symlink attacks.
+
+## 2026-10-27 - [Insecure Error Handling & File Serving]
+**Vulnerability:** The `/api/read_file` endpoint returned 200 OK with a JSON error message for blocked requests, confusing security scanners and clients. It also lacked `X-Content-Type-Options: nosniff` and CSP headers, increasing XSS risk for served HTML files.
+**Learning:** Security controls must fail securely with appropriate HTTP status codes (403/404). File serving endpoints must include security headers to prevent MIME-sniffing and XSS.
+**Prevention:** Raise `HTTPException(status_code=403)` for access violations. Use `os.path.commonpath` for robust path validation. Add `X-Content-Type-Options: nosniff` and `Content-Security-Policy` headers to file responses.
