@@ -57,39 +57,50 @@ class FailureCriterion:
         eps0 = strain_curvature[:3, :] # (3, n_angles)
         kappa = strain_curvature[3:, :] # (3, n_angles)
 
-        ply_stresses = []
-
-        # Pre-calculate ply transformation
-        ply_angles_rad = np.radians(laminate.stack)
-        c_plies = np.cos(ply_angles_rad)
-        s_plies = np.sin(ply_angles_rad)
-
         Q = laminate.material.Q() # (3, 3)
 
-        for i, ply_angle in enumerate(laminate.stack):
-            z = laminate.z_coords[i] + laminate.ply_thickness/2
-            # eps_global: (3, n_angles)
-            # z is scalar, kappa is (3, n_angles) -> broadcasting works
-            eps_global = eps0 + z * kappa
+        # Cache for angle-dependent terms to avoid redundant calculations
+        # Key: angle, Value: (A_term, B_term) where s = A_term + z * B_term
+        angle_cache = {}
+        unique_angles = set(laminate.stack)
 
-            c = c_plies[i]
-            s = s_plies[i]
+        for angle in unique_angles:
+            theta = np.radians(angle)
+            c = np.cos(theta)
+            s = np.sin(theta)
+            c2 = c*c
+            s2 = s*s
+            cs = c*s
 
-            ex = eps_global[0]
-            ey = eps_global[1]
-            gxy = eps_global[2]
+            # T_epsilon matrix: strain transformation global -> local
+            T = np.array([
+                [c2, s2, cs],
+                [s2, c2, -cs],
+                [-2*cs, 2*cs, c2-s2]
+            ])
 
-            e1 = c**2 * ex + s**2 * ey + c*s*gxy
-            e2 = s**2 * ex + c**2 * ey - c*s*gxy
-            g12 = -2*c*s * ex + 2*c*s * ey + (c**2 - s**2) * gxy
+            # K = Q @ T
+            # s_local = Q @ eps_local = Q @ T @ eps_global
+            # s_local = K @ (eps0 + z * kappa) = (K @ eps0) + z * (K @ kappa)
+            K = Q @ T
 
-            s1 = Q[0,0]*e1 + Q[0,1]*e2
-            s2 = Q[1,0]*e1 + Q[1,1]*e2
-            t12 = Q[2,2]*g12
+            A_term = K @ eps0 # (3, n_angles)
+            B_term = K @ kappa # (3, n_angles)
+            angle_cache[angle] = (A_term, B_term)
 
-            ply_stresses.append((s1, s2, t12))
+        def stress_generator():
+            # Z coordinates midpoints
+            z_mids = (laminate.z_coords[:-1] + laminate.z_coords[1:]) / 2
 
-        return sx_unit, sy_unit, ply_stresses
+            for i, angle in enumerate(laminate.stack):
+                z = z_mids[i]
+                A, B = angle_cache[angle]
+
+                # Compute component-wise to avoid allocating intermediate (3, N) array
+                # and keep operations cache-friendly
+                yield A[0] + z * B[0], A[1] + z * B[1], A[2] + z * B[2]
+
+        return sx_unit, sy_unit, stress_generator()
 
     @staticmethod
     def _get_stresses(laminate, angle, h):

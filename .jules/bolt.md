@@ -13,3 +13,7 @@
 ## 2026-02-27 - [Polar Stiffness Vectorization]
 **Learning:** Looping over angles in Python to calculate rotated stiffness properties (`polar_stiffness`) is slow (~30ms for 360 angles). Vectorizing the rotation matrix construction and matrix multiplication using NumPy broadcasting reduces this to ~3ms (~10x speedup).
 **Action:** Vectorize geometric transformations of stiffness matrices over the angle dimension using `(N, 3, 3)` stacks.
+
+## 2026-03-01 - [Failure Criteria Memory Bottleneck]
+**Learning:** Fully vectorizing `FailureCriterion` calculations across both plies (200) and angles (3600) simultaneously created massive intermediate arrays (5.7MB each), causing memory bandwidth bottlenecks and cache misses that made the vectorized code slower than a simple Python loop for large laminates.
+**Action:** Use a hybrid approach: pre-calculate angle-dependent terms (A, B) for unique ply angles, then use a generator to yield stress components ply-by-ply. This avoids large allocations while keeping computational efficiency high (~40% faster than loop).
