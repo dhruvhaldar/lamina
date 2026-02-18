@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, field_validator, model_validator
@@ -129,9 +129,17 @@ def read_file(filename: str):
     requested_path = os.path.realpath(os.path.join(base_dir, filename))
 
     # Verify the path is within the public directory
-    if not requested_path.startswith(os.path.join(base_dir, "")):
-        return {"error": "Access denied"}
+    # os.path.commonpath correctly resolves symlinks and ..
+    if os.path.commonpath([base_dir, requested_path]) != base_dir:
+        raise HTTPException(status_code=403, detail="Access denied")
 
-    if os.path.exists(requested_path) and os.path.isfile(requested_path):
-        return FileResponse(requested_path)
-    return {"error": "File not found"}
+    if not (os.path.exists(requested_path) and os.path.isfile(requested_path)):
+        raise HTTPException(status_code=404, detail="File not found")
+
+    response = FileResponse(requested_path)
+    # Security headers
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    # Allow scripts from self and d3js (CDN), allow unsafe-inline for now as frontend relies on it
+    response.headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self' 'unsafe-inline' https://d3js.org; style-src 'self' 'unsafe-inline'; img-src 'self' data:"
+
+    return response

@@ -1,6 +1,7 @@
 import os
 import pytest
 from fastapi.responses import FileResponse
+from fastapi import HTTPException
 from api.index import read_file
 
 def test_path_traversal_blocked():
@@ -11,22 +12,12 @@ def test_path_traversal_blocked():
     filename = "../requirements.txt"
 
     # Call the function directly to bypass any router/middleware checks
-    response = read_file(filename)
+    # Expect 403 Forbidden
+    with pytest.raises(HTTPException) as excinfo:
+        read_file(filename)
 
-    # Check if the response is a FileResponse
-    if isinstance(response, FileResponse):
-        # Resolve the path and check if it escaped public/
-        resolved_path = os.path.abspath(response.path)
-        public_dir = os.path.abspath("public")
-
-        # If it escaped public/, fail the test
-        if not resolved_path.startswith(public_dir):
-            pytest.fail(f"Path traversal vulnerability detected! Accessed: {resolved_path}")
-
-    # If it's not a FileResponse, it likely returned an error dict, which is safe(r)
-    assert isinstance(response, dict)
-    assert "error" in response
-    assert response["error"] == "Access denied"
+    assert excinfo.value.status_code == 403
+    assert excinfo.value.detail == "Access denied"
 
 def test_symlink_traversal_blocked():
     """
@@ -49,20 +40,12 @@ def test_symlink_traversal_blocked():
         os.symlink(target_path, symlink_path)
 
         # Try to access the symlink
-        response = read_file(symlink_name)
+        # Expect 403 Forbidden because resolving symlink points outside
+        with pytest.raises(HTTPException) as excinfo:
+            read_file(symlink_name)
 
-        # Verify it is blocked
-        if isinstance(response, FileResponse):
-             # Check if the response path resolves to outside public
-             resolved_path = os.path.realpath(response.path)
-             public_dir = os.path.realpath("public")
-
-             if not resolved_path.startswith(public_dir):
-                 pytest.fail(f"Symlink traversal vulnerability detected! Accessed: {resolved_path}")
-
-        assert isinstance(response, dict)
-        assert "error" in response
-        assert response["error"] == "Access denied"
+        assert excinfo.value.status_code == 403
+        assert excinfo.value.detail == "Access denied"
 
     finally:
         # Cleanup
@@ -71,7 +54,7 @@ def test_symlink_traversal_blocked():
 
 def test_valid_file_access():
     """
-    Test that valid file access still works.
+    Test that valid file access still works and returns security headers.
     """
     # Create a dummy file in public/ for testing if needed, or use index.html
     filename = "index.html"
@@ -83,3 +66,9 @@ def test_valid_file_access():
     assert isinstance(response, FileResponse)
     # Use realpath to be safe in comparison
     assert os.path.realpath(response.path) == os.path.realpath("public/index.html")
+
+    # Check security headers
+    assert "X-Content-Type-Options" in response.headers
+    assert response.headers["X-Content-Type-Options"] == "nosniff"
+    assert "Content-Security-Policy" in response.headers
+    assert "default-src 'self'" in response.headers["Content-Security-Policy"]
