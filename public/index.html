@@ -46,19 +46,19 @@
         <div class="results">
             <div class="panel" id="properties-panel">
                 <h3>Engineering Constants</h3>
-                <div id="constants-output"></div>
+                <div id="constants-output" class="empty-state">Run calculation to view engineering constants.</div>
                 <h3>ABD Matrix</h3>
-                <pre id="abd-output"></pre>
+                <div id="abd-output" class="empty-state">Run calculation to view ABD matrix.</div>
             </div>
 
             <div class="panel">
                 <h3>Stiffness Polar Plot (Ex)</h3>
-                <div id="polar-plot"></div>
+                <div id="polar-plot" class="empty-state">Plot stiffness to visualize anisotropy.</div>
             </div>
 
             <div class="panel">
                 <h3>Failure Envelope (Tsai-Wu)</h3>
-                <div id="envelope-plot"></div>
+                <div id="envelope-plot" class="empty-state">Plot envelope to visualize failure limits.</div>
             </div>
         </div>
     </div>
@@ -183,8 +183,13 @@
 
                 const result = await response.json();
 
-                document.getElementById('constants-output').innerHTML = formatEngineeringConstants(result.properties);
-                document.getElementById('abd-output').textContent = formatMatrix(result.ABD);
+                const constsOut = document.getElementById('constants-output');
+                constsOut.innerHTML = formatEngineeringConstants(result.properties);
+                constsOut.classList.remove('empty-state');
+
+                const abdOut = document.getElementById('abd-output');
+                abdOut.innerHTML = `<pre>${formatMatrix(result.ABD)}</pre>`;
+                abdOut.classList.remove('empty-state');
                 showToast('Calculation complete', 'success');
             } catch (error) {
                 console.error('Error:', error);
@@ -209,6 +214,7 @@
                 }
 
                 const result = await response.json();
+                document.getElementById('polar-plot').classList.remove('empty-state');
                 drawPolar(result);
                 showToast('Stiffness polar plotted', 'success');
             } catch (error) {
@@ -235,6 +241,7 @@
                 }
 
                 const result = await response.json();
+                document.getElementById('envelope-plot').classList.remove('empty-state');
                 drawEnvelope(result);
                 showToast('Failure envelope plotted', 'success');
             } catch (error) {
