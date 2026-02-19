@@ -2,11 +2,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 from lamina.materials import Material
 
-def _transform_stiffness(Q, angle_deg):
+def _get_transformation_matrices(angle_deg):
     """
-    Transforms stiffness matrix Q by rotating coordinate system by angle_deg.
-    Q' = T_sigma @ Q @ T_epsilon_inv
-    Supports angle_deg as scalar or numpy array.
+    Computes T_sigma and T_epsilon_inv matrices for a given angle (scalar or array).
     """
     theta = np.radians(angle_deg)
     c = np.cos(theta)
@@ -26,8 +24,6 @@ def _transform_stiffness(Q, angle_deg):
             [s**2, c**2, c*s],
             [2*c*s, -2*c*s, c**2-s**2]
         ])
-        return T_sigma @ Q @ T_epsilon_inv
-
     else:
         # Vectorized case: theta is (N,)
         c2 = c**2
@@ -51,9 +47,25 @@ def _transform_stiffness(Q, angle_deg):
         ])
         T_epsilon_inv = T_epsilon_inv_T.transpose(2, 0, 1)
 
-        # Broadcasting: (N, 3, 3) @ (3, 3) -> (N, 3, 3)
-        # (N, 3, 3) @ (N, 3, 3) -> (N, 3, 3)
-        return T_sigma @ Q @ T_epsilon_inv
+    return T_sigma, T_epsilon_inv
+
+
+def _apply_transformation(Q, T_sigma, T_epsilon_inv):
+    """
+    Applies transformation: Q' = T_sigma @ Q @ T_epsilon_inv.
+    Handles broadcasting if T matrices are stacked.
+    """
+    return T_sigma @ Q @ T_epsilon_inv
+
+
+def _transform_stiffness(Q, angle_deg):
+    """
+    Transforms stiffness matrix Q by rotating coordinate system by angle_deg.
+    Q' = T_sigma @ Q @ T_epsilon_inv
+    Supports angle_deg as scalar or numpy array.
+    """
+    T_sigma, T_epsilon_inv = _get_transformation_matrices(angle_deg)
+    return _apply_transformation(Q, T_sigma, T_epsilon_inv)
 
 class PolarResult:
     def __init__(self, data):
@@ -184,9 +196,12 @@ class Laminate:
         h = self.total_thickness
 
         # Vectorized transformation: returns (N, 3, 3)
-        A_prime = _transform_stiffness(self.A, angles)
-        B_prime = _transform_stiffness(self.B, angles)
-        D_prime = _transform_stiffness(self.D, angles)
+        # Calculate transformation matrices once for all angles
+        T_sigma, T_epsilon_inv = _get_transformation_matrices(angles)
+
+        A_prime = _apply_transformation(self.A, T_sigma, T_epsilon_inv)
+        B_prime = _apply_transformation(self.B, T_sigma, T_epsilon_inv)
+        D_prime = _apply_transformation(self.D, T_sigma, T_epsilon_inv)
 
         # Assemble rotated ABD: (N, 6, 6)
         # Build block matrix for each angle

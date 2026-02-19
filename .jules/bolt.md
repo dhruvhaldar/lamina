@@ -17,3 +17,7 @@
 ## 2026-03-01 - [Failure Criteria Memory Bottleneck]
 **Learning:** Fully vectorizing `FailureCriterion` calculations across both plies (200) and angles (3600) simultaneously created massive intermediate arrays (5.7MB each), causing memory bandwidth bottlenecks and cache misses that made the vectorized code slower than a simple Python loop for large laminates.
 **Action:** Use a hybrid approach: pre-calculate angle-dependent terms (A, B) for unique ply angles, then use a generator to yield stress components ply-by-ply. This avoids large allocations while keeping computational efficiency high (~40% faster than loop).
+
+## 2026-03-05 - [Redundant Geometric Transformations]
+**Learning:** Calculating transformation matrices (T_sigma, T_epsilon_inv) repeatedly for different stiffness matrices (A, B, D) with identical angles wastes ~66% of trigonometric computations in polar plots.
+**Action:** Factor out transformation matrix construction from the application step. Compute matrices once for the angle array, then reuse them for transforming all stiffness components.
