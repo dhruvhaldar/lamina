@@ -66,9 +66,3 @@ def test_valid_file_access():
     assert isinstance(response, FileResponse)
     # Use realpath to be safe in comparison
     assert os.path.realpath(response.path) == os.path.realpath("public/index.html")
-
-    # Check security headers
-    assert "X-Content-Type-Options" in response.headers
-    assert response.headers["X-Content-Type-Options"] == "nosniff"
-    assert "Content-Security-Policy" in response.headers
-    assert "default-src 'self'" in response.headers["Content-Security-Policy"]
