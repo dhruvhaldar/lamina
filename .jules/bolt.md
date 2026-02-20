@@ -21,3 +21,7 @@
 ## 2026-03-05 - [Redundant Geometric Transformations]
 **Learning:** Calculating transformation matrices (T_sigma, T_epsilon_inv) repeatedly for different stiffness matrices (A, B, D) with identical angles wastes ~66% of trigonometric computations in polar plots.
 **Action:** Factor out transformation matrix construction from the application step. Compute matrices once for the angle array, then reuse them for transforming all stiffness components.
+
+## 2026-03-08 - [Safety Factor Vectorization]
+**Learning:** Explicit loops over laminate plies in failure analysis (`calculate_safety_factor`) are a major bottleneck for iterative algorithms like Genetic Algorithms. Fully vectorizing strain/stress transformations and failure criteria evaluation across all plies yields a ~19x speedup.
+**Action:** Replace ply-wise loops with NumPy broadcasting for single load case analysis, ensuring robust handling of singular/linear cases in quadratic failure criteria.

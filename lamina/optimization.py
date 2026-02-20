@@ -29,50 +29,102 @@ def calculate_safety_factor(laminate, load, limits):
     F66 = 1/(S**2)
     F12 = -0.5 * np.sqrt(F11 * F22)
 
-    min_sf = float('inf')
+    # Vectorized implementation for performance
+    # 1. Z-coordinates for mid-plies
+    z_mids = (laminate.z_coords[:-1] + laminate.z_coords[1:]) / 2 # (n_plies,)
 
-    for i, ply_angle in enumerate(laminate.stack):
-        z = laminate.z_coords[i] + laminate.ply_thickness/2
-        eps_global = eps0 + z * kap
+    # 2. Global Strains for all plies: eps = eps0 + z * kappa
+    # eps0, kap: (3,)
+    # z_mids: (n_plies,)
+    # eps_global: (3, n_plies)
+    eps_global = eps0[:, None] + kap[:, None] * z_mids
 
-        theta = np.radians(ply_angle)
-        c = np.cos(theta)
-        s = np.sin(theta)
+    # 3. Ply Angles -> Sin/Cos
+    angles = np.array(laminate.stack)
+    theta = np.radians(angles)
+    c = np.cos(theta)
+    s = np.sin(theta)
+    c2 = c**2
+    s2 = s**2
+    cs = c*s
 
-        ex = eps_global[0]
-        ey = eps_global[1]
-        gxy = eps_global[2]
+    # 4. Global Strain Components
+    ex = eps_global[0]
+    ey = eps_global[1]
+    gxy = eps_global[2]
 
-        e1 = c**2 * ex + s**2 * ey + c*s*gxy
-        e2 = s**2 * ex + c**2 * ey - c*s*gxy
-        g12 = -2*c*s * ex + 2*c*s * ey + (c**2 - s**2) * gxy
+    # 5. Local Strains (Rotation)
+    e1 = c2 * ex + s2 * ey + cs * gxy
+    e2 = s2 * ex + c2 * ey - cs * gxy
+    g12 = -2*cs * ex + 2*cs * ey + (c2 - s2) * gxy
 
-        Q = laminate.material.Q()
-        s1 = Q[0,0]*e1 + Q[0,1]*e2
-        s2 = Q[1,0]*e1 + Q[1,1]*e2
-        t12 = Q[2,2]*g12
+    # 6. Local Stresses (Constitutive)
+    Q = laminate.material.Q()
+    s1 = Q[0,0]*e1 + Q[0,1]*e2
+    s2 = Q[1,0]*e1 + Q[1,1]*e2
+    t12 = Q[2,2]*g12
 
-        # Tsai-Wu: A f^2 + B f - 1 = 0
-        A = F11*s1**2 + F22*s2**2 + F66*t12**2 + 2*F12*s1*s2
-        B = F1*s1 + F2*s2
+    # 7. Tsai-Wu Coefficients
+    # A f^2 + B f - 1 = 0
+    A_coeff = F11*s1**2 + F22*s2**2 + F66*t12**2 + 2*F12*s1*s2
+    B_coeff = F1*s1 + F2*s2
 
-        if abs(A) < 1e-10:
-             if B > 0: f = 1/B
-             else: f = float('inf')
-        else:
-            delta = B**2 + 4*A
-            if delta < 0: f = float('inf')
-            else:
-                f1 = (-B + np.sqrt(delta)) / (2*A)
-                f2 = (-B - np.sqrt(delta)) / (2*A)
-                if f1 > 0: f = f1
-                elif f2 > 0: f = f2
-                else: f = float('inf')
+    # 8. Solve Quadratic Equation Vectorized
+    # Initialize f with infinity
+    f = np.full_like(A_coeff, np.inf)
 
-        if f < min_sf:
-            min_sf = f
+    # Linear Case: A ~ 0
+    mask_linear = np.abs(A_coeff) < 1e-10
+    if np.any(mask_linear):
+        # f = 1/B if B > 0 else inf
+        B_lin = B_coeff[mask_linear]
+        f_lin = np.full_like(B_lin, np.inf)
+        valid_lin = B_lin > 0
+        f_lin[valid_lin] = 1.0 / B_lin[valid_lin]
+        f[mask_linear] = f_lin
 
-    return min_sf
+    # Quadratic Case: A != 0
+    mask_quad = ~mask_linear
+    if np.any(mask_quad):
+        A_q = A_coeff[mask_quad]
+        B_q = B_coeff[mask_quad]
+        delta = B_q**2 + 4*A_q
+
+        # If delta < 0, no real roots (complex failure?), f = inf
+        valid_delta = delta >= 0
+
+        # Only compute for valid delta
+        if np.any(valid_delta):
+            sqrt_delta = np.sqrt(delta[valid_delta])
+            Aq_valid = A_q[valid_delta]
+            Bq_valid = B_q[valid_delta]
+
+            f1 = (-Bq_valid + sqrt_delta) / (2*Aq_valid)
+            f2 = (-Bq_valid - sqrt_delta) / (2*Aq_valid)
+
+            # Pick smallest positive root
+            f_quad_valid = np.full_like(f1, np.inf)
+
+            # Check f1 > 0
+            mask_f1 = f1 > 0
+            f_quad_valid[mask_f1] = f1[mask_f1]
+
+            # Check f2 > 0 and (f2 < f1 or f1 <= 0)
+            # If f1 was not positive, we take f2 if positive
+            # If f1 was positive, we take min(f1, f2) if f2 positive
+            mask_f2 = (f2 > 0)
+            update_mask = mask_f2 & ((~mask_f1) | (f2 < f1))
+            f_quad_valid[update_mask] = f2[update_mask]
+
+            # Place back into f array
+            # First, place into quad subset
+            f_quad = np.full(mask_quad.sum(), np.inf)
+            f_quad[valid_delta] = f_quad_valid
+
+            # Then place into full array
+            f[mask_quad] = f_quad
+
+    return np.min(f)
 
 class GeneticAlgorithm:
     def __init__(self, material, load, constraints, population_size=20, generations=10):
