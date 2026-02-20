@@ -8,8 +8,10 @@ import os
 from lamina.materials import Material
 from lamina.clt import Laminate
 from lamina.failure import FailureCriterion
+from api.middleware import SecurityHeadersMiddleware
 
 app = FastAPI()
+app.add_middleware(SecurityHeadersMiddleware)
 
 # Pydantic models
 class MaterialModel(BaseModel):
@@ -136,10 +138,4 @@ def read_file(filename: str):
     if not (os.path.exists(requested_path) and os.path.isfile(requested_path)):
         raise HTTPException(status_code=404, detail="File not found")
 
-    response = FileResponse(requested_path)
-    # Security headers
-    response.headers["X-Content-Type-Options"] = "nosniff"
-    # Allow scripts from self and d3js (CDN), allow unsafe-inline for now as frontend relies on it
-    response.headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self' 'unsafe-inline' https://d3js.org; style-src 'self' 'unsafe-inline'; img-src 'self' data:"
-
-    return response
+    return FileResponse(requested_path)
