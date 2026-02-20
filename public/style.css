@@ -212,3 +212,13 @@ input:focus-visible, button:focus-visible {
     height: 14px;
     fill: currentColor;
 }
+
+/* Palette: Input Preview */
+.input-preview {
+    float: right;
+    color: #3498db;
+    font-size: 0.9em;
+    font-weight: normal;
+    pointer-events: none;
+    margin-top: 2px;
+}
