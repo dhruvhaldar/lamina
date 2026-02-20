@@ -16,3 +16,7 @@
 ## 2026-02-17 - Input Formatting Guidance
 **Learning:** Users can find inputs with specific formatting requirements (like comma-separated lists) ambiguous without explicit examples.
 **Action:** Added helper text with `aria-describedby` to provide clear formatting instructions and associate them programmatically for screen readers.
+
+## 2026-02-18 - Result Portability
+**Learning:** Users analyzing matrix data often need to transfer results to external tools, and manual selection is error-prone.
+**Action:** Implement "Copy to Clipboard" actions with visual feedback ("Copied!") for all preformatted data outputs.
