@@ -4,6 +4,10 @@ from lamina.clt import Laminate
 from lamina.buckling import BucklingAnalysis
 
 def calculate_safety_factor(laminate, load, limits):
+    """
+    Calculates the minimum safety factor using Tsai-Wu criterion.
+    Vectorized implementation for performance.
+    """
     Nx = load.get('Nx', 0)
     Ny = load.get('Ny', 0)
     Nxy = load.get('Nxy', 0)
@@ -29,50 +33,91 @@ def calculate_safety_factor(laminate, load, limits):
     F66 = 1/(S**2)
     F12 = -0.5 * np.sqrt(F11 * F22)
 
-    min_sf = float('inf')
+    # Vectorized operations
+    angles = np.array(laminate.stack)
+    theta = np.radians(angles)
+    c = np.cos(theta)
+    s = np.sin(theta)
+    c2 = c**2
+    s2 = s**2
+    cs = c*s
 
-    for i, ply_angle in enumerate(laminate.stack):
-        z = laminate.z_coords[i] + laminate.ply_thickness/2
-        eps_global = eps0 + z * kap
+    # z coordinates (midpoints)
+    # laminate.z_coords is size N+1
+    z = (laminate.z_coords[:-1] + laminate.z_coords[1:]) / 2
 
-        theta = np.radians(ply_angle)
-        c = np.cos(theta)
-        s = np.sin(theta)
+    # eps_global: (3, N)
+    # eps0: (3,) -> (3, 1)
+    # kap: (3,) -> (3, 1)
+    # z: (N,) -> (1, N)
+    eps_global = eps0[:, np.newaxis] + kap[:, np.newaxis] * z[np.newaxis, :]
 
-        ex = eps_global[0]
-        ey = eps_global[1]
-        gxy = eps_global[2]
+    ex = eps_global[0]
+    ey = eps_global[1]
+    gxy = eps_global[2]
 
-        e1 = c**2 * ex + s**2 * ey + c*s*gxy
-        e2 = s**2 * ex + c**2 * ey - c*s*gxy
-        g12 = -2*c*s * ex + 2*c*s * ey + (c**2 - s**2) * gxy
+    e1 = c2 * ex + s2 * ey + cs * gxy
+    e2 = s2 * ex + c2 * ey - cs * gxy
+    g12 = -2*cs * ex + 2*cs * ey + (c2 - s2) * gxy
 
-        Q = laminate.material.Q()
-        s1 = Q[0,0]*e1 + Q[0,1]*e2
-        s2 = Q[1,0]*e1 + Q[1,1]*e2
-        t12 = Q[2,2]*g12
+    # Use laminate.material.Q() (Material Q matrix is constant)
+    Q = laminate.material.Q()
+    s1 = Q[0,0]*e1 + Q[0,1]*e2
+    s2 = Q[1,0]*e1 + Q[1,1]*e2
+    t12 = Q[2,2]*g12
 
-        # Tsai-Wu: A f^2 + B f - 1 = 0
-        A = F11*s1**2 + F22*s2**2 + F66*t12**2 + 2*F12*s1*s2
-        B = F1*s1 + F2*s2
+    # Tsai-Wu: A f^2 + B f - 1 = 0
+    A = F11*s1**2 + F22*s2**2 + F66*t12**2 + 2*F12*s1*s2
+    B = F1*s1 + F2*s2
 
-        if abs(A) < 1e-10:
-             if B > 0: f = 1/B
-             else: f = float('inf')
-        else:
-            delta = B**2 + 4*A
-            if delta < 0: f = float('inf')
-            else:
-                f1 = (-B + np.sqrt(delta)) / (2*A)
-                f2 = (-B - np.sqrt(delta)) / (2*A)
-                if f1 > 0: f = f1
-                elif f2 > 0: f = f2
-                else: f = float('inf')
+    # Initialize f with infinity
+    f_all = np.full_like(A, np.inf)
 
-        if f < min_sf:
-            min_sf = f
+    # Handle A near 0 (linear case)
+    mask_linear = np.abs(A) < 1e-10
 
-    return min_sf
+    # Linear: B*f - 1 = 0 => f = 1/B
+    # Only if B > 0
+    mask_lin_pos = mask_linear & (B > 0)
+    f_all[mask_lin_pos] = 1 / B[mask_lin_pos]
+
+    # Quadratic
+    mask_quad = ~mask_linear
+
+    if np.any(mask_quad):
+        A_q = A[mask_quad]
+        B_q = B[mask_quad]
+        delta = B_q**2 + 4*A_q
+
+        # Check for valid solutions (delta >= 0)
+        mask_delta = delta >= 0
+
+        if np.any(mask_delta):
+            sqrt_delta = np.sqrt(delta[mask_delta])
+            A_valid = A_q[mask_delta]
+            B_valid = B_q[mask_delta]
+
+            f1 = (-B_valid + sqrt_delta) / (2*A_valid)
+            f2 = (-B_valid - sqrt_delta) / (2*A_valid)
+
+            f_sol = np.full_like(f1, np.inf)
+
+            # Prefer f1 if > 0
+            mask_f1 = f1 > 0
+            f_sol[mask_f1] = f1[mask_f1]
+
+            # Else try f2
+            mask_f2 = (~mask_f1) & (f2 > 0)
+            f_sol[mask_f2] = f2[mask_f2]
+
+            # Map back to f_all
+            # Create array for quadratic subset
+            f_quad_subset = np.full(mask_quad.sum(), np.inf)
+            f_quad_subset[mask_delta] = f_sol
+
+            f_all[mask_quad] = f_quad_subset
+
+    return np.min(f_all)
 
 class GeneticAlgorithm:
     def __init__(self, material, load, constraints, population_size=20, generations=10):
