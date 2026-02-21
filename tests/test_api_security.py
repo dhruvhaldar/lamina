@@ -19,6 +19,9 @@ def test_security_headers_root():
     assert "X-Frame-Options" in headers
     assert headers["X-Frame-Options"] == "DENY"
 
+    assert "Strict-Transport-Security" in headers
+    assert headers["Strict-Transport-Security"] == "max-age=31536000; includeSubDomains"
+
     assert "Content-Security-Policy" in headers
     assert "default-src 'self'" in headers["Content-Security-Policy"]
 
@@ -53,6 +56,9 @@ def test_security_headers_calculate():
 
     assert "X-Frame-Options" in headers
     assert headers["X-Frame-Options"] == "DENY"
+
+    assert "Strict-Transport-Security" in headers
+    assert headers["Strict-Transport-Security"] == "max-age=31536000; includeSubDomains"
 
     assert "Content-Security-Policy" in headers
     assert "default-src 'self'" in headers["Content-Security-Policy"]
