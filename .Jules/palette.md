@@ -24,3 +24,7 @@
 ## 2026-02-19 - Scientific Notation Verification
 **Learning:** Users struggle to verify correct entry of scientific notation (e.g., distinguishing `14e9` from `1.4e9`), leading to order-of-magnitude errors.
 **Action:** Implement a real-time "Input Preview" that formats scientific values into human-readable engineering units (e.g., `14 GPa`) alongside the raw input.
+
+## 2026-02-21 - Copying Complex Layouts
+**Learning:** Visual grids (like property lists) are hard to copy cleanly.
+**Action:** Use a hidden `.clipboard-data` element with pre-formatted text as a source for clipboard actions, decoupling presentation from data portability.
