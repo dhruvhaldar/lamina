@@ -147,25 +147,24 @@ class Laminate:
         return z
 
     def _get_Q_bar(self, angle_deg):
+        # Use invariants for faster calculation
+        U1, U2, U3, U4, U5 = self.material.invariants
+
         theta = np.radians(angle_deg)
-        m = np.cos(theta)
-        n = np.sin(theta)
-        m2 = m**2
-        n2 = n**2
-        m4 = m**4
-        n4 = n**4
+        t2 = 2 * theta
+        t4 = 2 * t2
 
-        Q11 = self.Q_mat[0, 0]
-        Q12 = self.Q_mat[0, 1]
-        Q22 = self.Q_mat[1, 1]
-        Q66 = self.Q_mat[2, 2]
+        cos2 = np.cos(t2)
+        sin2 = np.sin(t2)
+        cos4 = np.cos(t4)
+        sin4 = np.sin(t4)
 
-        Q_bar_11 = Q11*m4 + 2*(Q12 + 2*Q66)*m2*n2 + Q22*n4
-        Q_bar_12 = (Q11 + Q22 - 4*Q66)*m2*n2 + Q12*(m4 + n4)
-        Q_bar_22 = Q11*n4 + 2*(Q12 + 2*Q66)*m2*n2 + Q22*m4
-        Q_bar_16 = (Q11 - Q12 - 2*Q66)*n*m**3 + (Q12 - Q22 + 2*Q66)*n**3*m
-        Q_bar_26 = (Q11 - Q12 - 2*Q66)*n**3*m + (Q12 - Q22 + 2*Q66)*n*m**3
-        Q_bar_66 = (Q11 + Q22 - 2*Q12 - 2*Q66)*m2*n2 + Q66*(m4 + n4)
+        Q_bar_11 = U1 + U2*cos2 + U3*cos4
+        Q_bar_12 = U4 - U3*cos4
+        Q_bar_22 = U1 - U2*cos2 + U3*cos4
+        Q_bar_16 = 0.5*U2*sin2 + U3*sin4
+        Q_bar_26 = 0.5*U2*sin2 - U3*sin4
+        Q_bar_66 = U5 - U3*cos4
 
         return np.array([
             [Q_bar_11, Q_bar_12, Q_bar_16],

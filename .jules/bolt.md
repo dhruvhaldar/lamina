@@ -25,3 +25,7 @@
 ## 2026-03-08 - [Safety Factor Calculation Vectorization]
 **Learning:** The `calculate_safety_factor` function in optimization loops was iterating over plies in Python, causing significant overhead (36.8ms per call). Fully vectorizing the strain transformation and Tsai-Wu failure criterion evaluation using NumPy broadcasting reduced execution time to ~0.3ms (100x speedup).
 **Action:** When evaluating failure criteria across many plies (e.g., in optimization), vectorize operations over the ply dimension to leverage NumPy's efficiency.
+
+## 2026-03-12 - [Invariant-based Stiffness Calculation]
+**Learning:** Repeated calculation of ply stiffness matrix `Q_bar` using explicit trigonometric powers (`cos**4`, `sin**4`) is computationally expensive during laminate instantiation (~0.26ms).
+**Action:** Use Tsai-Pagano invariants (U1-U5) cached in the `Material` object to compute `Q_bar` components via linear combinations of `cos(2t)` and `cos(4t)`. This reduces operations and speeds up laminate creation by ~2x.

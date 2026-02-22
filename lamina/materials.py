@@ -24,6 +24,31 @@ class Material:
         self.v21 = v12 * E2 / E1
         self.rho = rho
         self.name = name
+        self._invariants = None
+
+    @property
+    def invariants(self):
+        """
+        Calculate and cache the Tsai-Pagano invariants.
+
+        Returns:
+            tuple: (U1, U2, U3, U4, U5)
+        """
+        if self._invariants is None:
+            Q = self.Q()
+            Q11 = Q[0, 0]
+            Q12 = Q[0, 1]
+            Q22 = Q[1, 1]
+            Q66 = Q[2, 2]
+
+            U1 = (3*Q11 + 3*Q22 + 2*Q12 + 4*Q66) / 8
+            U2 = (Q11 - Q22) / 2
+            U3 = (Q11 + Q22 - 2*Q12 - 4*Q66) / 8
+            U4 = (Q11 + Q22 + 6*Q12 - 4*Q66) / 8
+            U5 = (Q11 + Q22 - 2*Q12 + 4*Q66) / 8
+            self._invariants = (U1, U2, U3, U4, U5)
+
+        return self._invariants
 
     def Q(self):
         """
