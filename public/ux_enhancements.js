@@ -38,8 +38,47 @@ function formatMetric(value, unit) {
     return `${sign}${numStr} ${prefix}${unit}`;
 }
 
+function initStackPreview() {
+    const stackInput = document.getElementById('stack');
+    const symInput = document.getElementById('symmetry');
+    const thickInput = document.getElementById('thickness');
+
+    if (!stackInput || !symInput || !thickInput) return;
+
+    const label = stackInput.parentElement;
+    const preview = document.createElement('span');
+    preview.className = 'input-preview';
+    label.insertBefore(preview, stackInput);
+
+    const update = () => {
+        const stackStr = stackInput.value;
+        const symmetric = symInput.checked;
+        const plyThick = parseFloat(thickInput.value) || 0;
+
+        const plies = stackStr.split(',').filter(s => s.trim() !== '');
+        if (plies.length === 0) {
+            preview.textContent = '';
+            return;
+        }
+
+        const count = plies.length * (symmetric ? 2 : 1);
+        const totalThick = count * plyThick;
+        const code = `[${plies.map(s => s.trim()).join('/')}]${symmetric ? 's' : 'T'}`;
+
+        preview.textContent = `${code} • ${formatMetric(totalThick, 'm')}`;
+    };
+
+    stackInput.addEventListener('input', update);
+    symInput.addEventListener('change', update);
+    thickInput.addEventListener('input', update);
+
+    // Initial update
+    update();
+}
+
 function initInputPreviews() {
-    const inputs = document.querySelectorAll('.input-grid input[type="number"]');
+    // Select all numeric inputs, not just those in the grid
+    const inputs = document.querySelectorAll('input[type="number"]');
 
     inputs.forEach(input => {
         // Skip Poisson's ratio (v12) as it's dimensionless
@@ -66,7 +105,11 @@ function initInputPreviews() {
 
 // Initialize when DOM is ready
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initInputPreviews);
+    document.addEventListener('DOMContentLoaded', () => {
+        initInputPreviews();
+        initStackPreview();
+    });
 } else {
     initInputPreviews();
+    initStackPreview();
 }
