@@ -28,3 +28,7 @@
 ## 2026-02-21 - Copying Complex Layouts
 **Learning:** Visual grids (like property lists) are hard to copy cleanly.
 **Action:** Use a hidden `.clipboard-data` element with pre-formatted text as a source for clipboard actions, decoupling presentation from data portability.
+
+## 2026-02-22 - Laminate Visualization
+**Learning:** Users configuring laminate stacks struggle to visualize the final configuration (symmetry, total thickness) from a raw string of angles, leading to design errors.
+**Action:** Implement a real-time "Laminate Code Preview" that parses the input and displays standard engineering notation (e.g., `[0/90]s`) and physical thickness (e.g., `500 µm`) alongside the input.
