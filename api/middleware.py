@@ -34,7 +34,19 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 
         # Cleanup if cache grows too large (simple protection against memory exhaustion)
         if len(self.clients) > 10000:
-            self.clients.clear()
+            # Secure cleanup: Remove expired entries instead of clearing all (fail-secure)
+            # This prevents an attacker from resetting the limit by filling the cache
+            expired = [ip for ip, (count, start) in self.clients.items() if now > start + self.window]
+            for ip in expired:
+                del self.clients[ip]
+
+            # If still too large, remove oldest entries (FIFO) to maintain memory bounds
+            if len(self.clients) > 10000:
+                # Remove first 100 entries (approx. 1% of cache)
+                # Python dicts preserve insertion order, so keys are ordered by insertion time
+                keys = list(self.clients.keys())
+                for k in keys[:100]:
+                    del self.clients[k]
 
         # Get current usage
         # Default start_time is now if new IP

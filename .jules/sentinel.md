@@ -22,3 +22,8 @@
 **Vulnerability:** The rate limiting middleware blindly trusted the first IP in the `X-Forwarded-For` header, allowing attackers to bypass the limit by injecting a fake IP (e.g., `X-Forwarded-For: 1.2.3.4`).
 **Learning:** In a proxied environment (like Vercel/AWS), the application receives a list of IPs in `X-Forwarded-For`. The first IP is often the client-provided (untrusted) one.
 **Prevention:** Rely on the infrastructure (ASGI server/Load Balancer) to resolve the client IP into `request.client.host` using trusted proxy configuration (e.g., `--proxy-headers` in Uvicorn), or parse `X-Forwarded-For` carefully by taking the rightmost trusted IP.
+
+## 2025-02-14 - Rate Limit Cache Clearing Vulnerability
+**Vulnerability:** The rate limiting middleware used a fail-open strategy that cleared the *entire* client cache when it reached capacity (10,000 entries). This allowed attackers to bypass rate limits by intentionally flooding the cache with requests from spoofed or distributed IPs.
+**Learning:** A mechanism designed for memory safety (preventing resource exhaustion) can inadvertently become a security vulnerability if it indiscriminately discards security state (rate limit counters).
+**Prevention:** Use targeted eviction strategies (e.g., removing expired entries first, then evicting oldest/LRU) instead of full cache clearing. Ensure that safety mechanisms do not compromise security controls.
