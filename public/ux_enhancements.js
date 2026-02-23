@@ -103,13 +103,78 @@ function initInputPreviews() {
     });
 }
 
+function initMaterialLibrary() {
+    const select = document.getElementById('material-select');
+    if (!select) return;
+
+    const materials = {
+        'carbon': {
+            E1: 140e9, E2: 10e9, G12: 5e9, v12: 0.3,
+            Xt: 1500e6, Xc: 1200e6, Yt: 50e6, Yc: 250e6, S: 70e6
+        },
+        'glass': {
+            E1: 43e9, E2: 10e9, G12: 4.5e9, v12: 0.29,
+            Xt: 1000e6, Xc: 600e6, Yt: 30e6, Yc: 120e6, S: 40e6
+        }
+    };
+
+    const materialInputs = [
+        'E1', 'E2', 'G12', 'v12',
+        'Xt', 'Xc', 'Yt', 'Yc', 'S'
+    ];
+
+    // Handle selection change
+    select.addEventListener('change', (e) => {
+        const mat = materials[e.target.value];
+        if (mat) {
+            Object.entries(mat).forEach(([key, val]) => {
+                const input = document.getElementById(key);
+                if (input) {
+                    // Format large/small numbers to scientific notation for cleaner input
+                    if (Math.abs(val) >= 1e4 || (Math.abs(val) < 1e-3 && val !== 0)) {
+                        input.value = val.toExponential().replace('+', '');
+                    } else {
+                        input.value = val;
+                    }
+
+                    // Trigger input event to update previews
+                    input.dispatchEvent(new Event('input', { bubbles: true }));
+
+                    // Add a brief highlight effect
+                    input.style.transition = 'background-color 0.3s';
+                    input.style.backgroundColor = '#e8f4fc';
+                    setTimeout(() => {
+                        input.style.backgroundColor = '';
+                    }, 500);
+                }
+            });
+            showToast(`Loaded ${e.target.options[e.target.selectedIndex].text}`, 'success');
+        }
+    });
+
+    // Handle manual edits -> switch to Custom
+    materialInputs.forEach(id => {
+        const input = document.getElementById(id);
+        if (input) {
+            input.addEventListener('input', (e) => {
+                // If the user manually changes a value (and it's trusted, meaning user interaction), set to Custom
+                if (e.isTrusted && select.value !== 'custom') {
+                    select.value = 'custom';
+                }
+            });
+        }
+    });
+}
+
 // Initialize when DOM is ready
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
         initInputPreviews();
         initStackPreview();
+        initMaterialLibrary();
     });
 } else {
     initInputPreviews();
     initStackPreview();
+    initMaterialLibrary();
 }

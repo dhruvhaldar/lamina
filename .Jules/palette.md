@@ -32,3 +32,7 @@
 ## 2026-02-22 - Laminate Visualization
 **Learning:** Users configuring laminate stacks struggle to visualize the final configuration (symmetry, total thickness) from a raw string of angles, leading to design errors.
 **Action:** Implement a real-time "Laminate Code Preview" that parses the input and displays standard engineering notation (e.g., `[0/90]s`) and physical thickness (e.g., `500 µm`) alongside the input.
+
+## 2026-02-23 - Material Presets
+**Learning:** Users hesitate to start from scratch with blank or default values, often needing standard reference points (like Carbon/Epoxy).
+**Action:** Implement a "Material Library" dropdown that pre-fills standard values, reducing friction and errors.
