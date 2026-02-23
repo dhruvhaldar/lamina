@@ -123,10 +123,12 @@ class Laminate:
         h3 = zk**3 - zk_1**3
 
         # 3. Sum over plies (axis 2)
-        # Broadcasting: (3, 3, N) * (N,) -> (3, 3, N)
-        self.A = np.sum(Q_bars * h, axis=2)
-        self.B = 0.5 * np.sum(Q_bars * h2, axis=2)
-        self.D = (1/3) * np.sum(Q_bars * h3, axis=2)
+        # Optimization: Use dot product for A, B, and D matrices.
+        # This replaces broadcasting which creates large temporary arrays (3, 3, N)
+        # and leverages optimized BLAS routines (reshape(9, N) @ (N,)).
+        self.A = (Q_bars.reshape(9, -1) @ h).reshape(3, 3)
+        self.B = 0.5 * (Q_bars.reshape(9, -1) @ h2).reshape(3, 3)
+        self.D = (1/3) * (Q_bars.reshape(9, -1) @ h3).reshape(3, 3)
 
         # ABD Matrix
         self.ABD = np.vstack([
