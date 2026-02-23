@@ -27,3 +27,8 @@
 **Vulnerability:** The rate limiting middleware used a fail-open strategy that cleared the *entire* client cache when it reached capacity (10,000 entries). This allowed attackers to bypass rate limits by intentionally flooding the cache with requests from spoofed or distributed IPs.
 **Learning:** A mechanism designed for memory safety (preventing resource exhaustion) can inadvertently become a security vulnerability if it indiscriminately discards security state (rate limit counters).
 **Prevention:** Use targeted eviction strategies (e.g., removing expired entries first, then evicting oldest/LRU) instead of full cache clearing. Ensure that safety mechanisms do not compromise security controls.
+
+## 2026-06-25 - [XSS Prevention via strict CSP]
+**Vulnerability:** The Content Security Policy (CSP) allowed `'unsafe-inline'` in `script-src` to support legacy inline event handlers (e.g., `onclick="..."`). This significantly weakened XSS protection by allowing any injected script to execute.
+**Learning:** Modern frontend frameworks and even vanilla JS should avoid inline event handlers. Refactoring legacy code to use `addEventListener` enables a stricter CSP that blocks all inline scripts, mitigating XSS risks even if injection occurs.
+**Prevention:** Remove `'unsafe-inline'` from `script-src` in CSP. Move all JavaScript logic to external files and use `addEventListener` for event handling.

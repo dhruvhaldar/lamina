@@ -23,7 +23,11 @@ def test_security_headers_root():
     assert headers["Strict-Transport-Security"] == "max-age=31536000; includeSubDomains"
 
     assert "Content-Security-Policy" in headers
-    assert "default-src 'self'" in headers["Content-Security-Policy"]
+    csp = headers["Content-Security-Policy"]
+    assert "default-src 'self'" in csp
+    # Ensure unsafe-inline is NOT in script-src
+    script_src = [p for p in csp.split(';') if 'script-src' in p][0]
+    assert "'unsafe-inline'" not in script_src
 
     assert "Referrer-Policy" in headers
     assert headers["Referrer-Policy"] == "strict-origin-when-cross-origin"
@@ -61,4 +65,8 @@ def test_security_headers_calculate():
     assert headers["Strict-Transport-Security"] == "max-age=31536000; includeSubDomains"
 
     assert "Content-Security-Policy" in headers
-    assert "default-src 'self'" in headers["Content-Security-Policy"]
+    csp = headers["Content-Security-Policy"]
+    assert "default-src 'self'" in csp
+    # Ensure unsafe-inline is NOT in script-src
+    script_src = [p for p in csp.split(';') if 'script-src' in p][0]
+    assert "'unsafe-inline'" not in script_src
