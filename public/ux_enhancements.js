@@ -103,6 +103,40 @@ function initInputPreviews() {
     });
 }
 
+function initKeyboardShortcuts() {
+    // Check for Mac for appropriate symbol
+    const isMac = navigator.userAgent.toUpperCase().indexOf('MAC') >= 0;
+    const shortcutText = isMac ? '⌘↵' : 'Ctrl+Enter';
+
+    // Add visual hint to the button
+    const btn = document.getElementById('btn-calculate');
+    if (btn) {
+        const hint = document.createElement('span');
+        hint.className = 'shortcut-hint';
+        hint.textContent = shortcutText;
+        hint.title = `Press ${shortcutText} to calculate`;
+        hint.setAttribute('aria-hidden', 'true');
+        btn.appendChild(document.createTextNode(' '));
+        btn.appendChild(hint);
+    }
+
+    // Add global listener
+    document.addEventListener('keydown', (e) => {
+        // Trigger calculation on Ctrl+Enter (or Cmd+Enter on Mac)
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+            const btn = document.getElementById('btn-calculate');
+            if (btn && !btn.disabled) {
+                e.preventDefault();
+                btn.click();
+
+                // Visual feedback
+                btn.style.transform = 'scale(0.98)';
+                setTimeout(() => btn.style.transform = '', 100);
+            }
+        }
+    });
+}
+
 function initMaterialLibrary() {
     const select = document.getElementById('material-select');
     if (!select) return;
@@ -172,9 +206,11 @@ if (document.readyState === 'loading') {
         initInputPreviews();
         initStackPreview();
         initMaterialLibrary();
+        initKeyboardShortcuts();
     });
 } else {
     initInputPreviews();
     initStackPreview();
     initMaterialLibrary();
+    initKeyboardShortcuts();
 }

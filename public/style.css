@@ -222,3 +222,16 @@ input:focus-visible, button:focus-visible {
     pointer-events: none;
     margin-top: 2px;
 }
+
+/* Palette: Keyboard Shortcut Hint */
+.shortcut-hint {
+    font-size: 0.85em;
+    margin-left: 8px;
+    opacity: 0.9;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 2px 6px;
+    border-radius: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    font-family: monospace;
+    vertical-align: middle;
+}
