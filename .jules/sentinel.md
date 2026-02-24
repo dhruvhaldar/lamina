@@ -32,3 +32,8 @@
 **Vulnerability:** The Content Security Policy (CSP) allowed `'unsafe-inline'` in `script-src` to support legacy inline event handlers (e.g., `onclick="..."`). This significantly weakened XSS protection by allowing any injected script to execute.
 **Learning:** Modern frontend frameworks and even vanilla JS should avoid inline event handlers. Refactoring legacy code to use `addEventListener` enables a stricter CSP that blocks all inline scripts, mitigating XSS risks even if injection occurs.
 **Prevention:** Remove `'unsafe-inline'` from `script-src` in CSP. Move all JavaScript logic to external files and use `addEventListener` for event handling.
+
+## 2026-10-27 - [Missing Security Headers on Middleware Errors]
+**Vulnerability:** The `RateLimitMiddleware` was added after `SecurityHeadersMiddleware`, causing it to wrap `SecurityHeadersMiddleware`. When a request was rate-limited (429), the response was returned directly by `RateLimitMiddleware`, bypassing the inner `SecurityHeadersMiddleware` and leaving the response without critical security headers (HSTS, X-Frame-Options, CSP).
+**Learning:** In Starlette/FastAPI, `add_middleware` builds the stack such that the *last* added middleware is the *outermost* one (first to receive requests). Middleware order is critical: security headers middleware should be the outermost layer to ensure all responses, including those from other middleware (e.g., rate limits, auth failures), are protected.
+**Prevention:** Always verify middleware order. Add global security middleware (like headers, CORS) *last* in the `add_middleware` sequence (or use `Middleware` list in app init) to ensure they wrap the entire application stack.

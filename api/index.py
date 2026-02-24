@@ -11,8 +11,8 @@ from lamina.failure import FailureCriterion
 from api.middleware import SecurityHeadersMiddleware, RateLimitMiddleware
 
 app = FastAPI()
-app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(RateLimitMiddleware, limit=100, window=60)
+app.add_middleware(SecurityHeadersMiddleware)
 
 # Pydantic models
 class MaterialModel(BaseModel):
