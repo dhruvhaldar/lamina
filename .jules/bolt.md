@@ -33,3 +33,7 @@
 ## 2026-03-15 - [ABD Matrix Summation Optimization]
 **Learning:** Calculating laminate stiffness matrices (A, B, D) using `np.sum(Q_bars * h, axis=2)` involves broadcasting `(3, 3, N)` * `(N,)` -> `(3, 3, N)`, creating large intermediate arrays. Using a reshaped dot product `(Q_bars.reshape(9, -1) @ h).reshape(3, 3)` avoids this allocation and leverages optimized BLAS routines, providing a ~3.6x speedup for this operation.
 **Action:** Prefer matrix multiplication (`@`) over broadcasting and summation for weighted sums of matrices (tensor contraction), especially when the summation axis is large.
+
+## 2026-03-20 - [Precomputed Trigonometric Values]
+**Learning:** Redundant calls to `np.cos` and `np.sin` for the same ply angles in different parts of the pipeline (Laminate creation vs. Failure Analysis) add measurable overhead (~12% in safety factor loops). Additionally, using double-angle identities ((2\theta) = c^2 - s^2$) is faster than calling `np.cos(2\theta)`.
+**Action:** Compute `cos(theta)` and `sin(theta)` once during Laminate update, store them, and reuse them for both stiffness matrix calculation (via identities) and downstream failure analysis.

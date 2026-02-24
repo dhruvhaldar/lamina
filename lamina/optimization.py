@@ -34,10 +34,16 @@ def calculate_safety_factor(laminate, load, limits):
     F12 = -0.5 * np.sqrt(F11 * F22)
 
     # Vectorized operations
-    angles = np.array(laminate.stack)
-    theta = np.radians(angles)
-    c = np.cos(theta)
-    s = np.sin(theta)
+    # Optimization: Use precomputed trig values from Laminate if available
+    if hasattr(laminate, 'c') and hasattr(laminate, 's'):
+        c = laminate.c
+        s = laminate.s
+    else:
+        angles = np.array(laminate.stack)
+        theta = np.radians(angles)
+        c = np.cos(theta)
+        s = np.sin(theta)
+
     c2 = c**2
     s2 = s**2
     cs = c*s
