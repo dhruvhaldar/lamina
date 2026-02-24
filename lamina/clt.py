@@ -112,7 +112,14 @@ class Laminate:
         # Vectorized calculation for performance
         # 1. Calculate Q_bar for all plies at once
         angles = np.array(self.stack)
-        Q_bars = self._get_Q_bar(angles) # Returns (3, 3, n_plies)
+
+        # Precompute and store trig values for reuse in failure analysis and optimization
+        self.rads = np.radians(angles)
+        self.c = np.cos(self.rads)
+        self.s = np.sin(self.rads)
+
+        # Calculate Q_bar using precomputed trig values for performance
+        Q_bars = self._get_Q_bar_from_trig(self.c, self.s) # Returns (3, 3, n_plies)
 
         # 2. Calculate thickness terms
         zk = self.z_coords[1:]
@@ -149,17 +156,41 @@ class Laminate:
         return z
 
     def _get_Q_bar(self, angle_deg):
+        """
+        Calculate transformed stiffness matrix Q_bar for given angles.
+        Wrapper around _get_Q_bar_from_trig for backward compatibility.
+        """
+        theta = np.radians(angle_deg)
+        c = np.cos(theta)
+        s = np.sin(theta)
+        return self._get_Q_bar_from_trig(c, s)
+
+    def _get_Q_bar_from_trig(self, c, s):
+        """
+        Calculate transformed stiffness matrix Q_bar using precomputed cos(theta) and sin(theta).
+        Avoids recomputing trig functions and uses double-angle identities.
+        """
         # Use invariants for faster calculation
         U1, U2, U3, U4, U5 = self.material.invariants
 
-        theta = np.radians(angle_deg)
-        t2 = 2 * theta
-        t4 = 2 * t2
+        # Calculate double angles from single angles
+        # cos(2t) = c^2 - s^2
+        # sin(2t) = 2*c*s
 
-        cos2 = np.cos(t2)
-        sin2 = np.sin(t2)
-        cos4 = np.cos(t4)
-        sin4 = np.sin(t4)
+        c2 = c*c
+        s2 = s*s
+
+        cos2 = c2 - s2
+        sin2 = 2 * c * s
+
+        # cos(4t) = cos(2*2t) = cos2^2 - sin2^2
+        # sin(4t) = 2*cos2*sin2
+
+        cos2_sq = cos2*cos2
+        sin2_sq = sin2*sin2
+
+        cos4 = cos2_sq - sin2_sq
+        sin4 = 2 * cos2 * sin2
 
         Q_bar_11 = U1 + U2*cos2 + U3*cos4
         Q_bar_12 = U4 - U3*cos4
