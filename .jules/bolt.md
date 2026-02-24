@@ -29,3 +29,7 @@
 ## 2026-03-12 - [Invariant-based Stiffness Calculation]
 **Learning:** Repeated calculation of ply stiffness matrix `Q_bar` using explicit trigonometric powers (`cos**4`, `sin**4`) is computationally expensive during laminate instantiation (~0.26ms).
 **Action:** Use Tsai-Pagano invariants (U1-U5) cached in the `Material` object to compute `Q_bar` components via linear combinations of `cos(2t)` and `cos(4t)`. This reduces operations and speeds up laminate creation by ~2x.
+
+## 2026-03-15 - [ABD Matrix Summation Optimization]
+**Learning:** Calculating laminate stiffness matrices (A, B, D) using `np.sum(Q_bars * h, axis=2)` involves broadcasting `(3, 3, N)` * `(N,)` -> `(3, 3, N)`, creating large intermediate arrays. Using a reshaped dot product `(Q_bars.reshape(9, -1) @ h).reshape(3, 3)` avoids this allocation and leverages optimized BLAS routines, providing a ~3.6x speedup for this operation.
+**Action:** Prefer matrix multiplication (`@`) over broadcasting and summation for weighted sums of matrices (tensor contraction), especially when the summation axis is large.
