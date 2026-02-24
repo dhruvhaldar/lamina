@@ -14,6 +14,14 @@
 
         <div class="panel">
             <h2>Material Properties</h2>
+            <div class="material-select-wrapper" style="margin-bottom: 15px;">
+                <label for="material-select">Material Preset: </label>
+                <select id="material-select" aria-label="Select Material Preset">
+                    <option value="carbon">Carbon/Epoxy (Standard)</option>
+                    <option value="glass">Glass/Epoxy (Standard)</option>
+                    <option value="custom">Custom</option>
+                </select>
+            </div>
             <div class="input-grid">
                 <label title="Longitudinal Young's Modulus">E1 (Pa): <input type="number" id="E1" value="140e9"></label>
                 <label title="Transverse Young's Modulus">E2 (Pa): <input type="number" id="E2" value="10e9"></label>
