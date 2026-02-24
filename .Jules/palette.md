@@ -36,3 +36,7 @@
 ## 2026-02-23 - Material Presets
 **Learning:** Users hesitate to start from scratch with blank or default values, often needing standard reference points (like Carbon/Epoxy).
 **Action:** Implement a "Material Library" dropdown that pre-fills standard values, reducing friction and errors.
+
+## 2026-02-24 - Keyboard Efficiency
+**Learning:** Power users (engineers) find repetitive mouse clicks for calculation inefficient and prefer keyboard-first workflows.
+**Action:** Implement global keyboard shortcuts (e.g., Ctrl+Enter) with discoverable visual hints (badges) on the primary action buttons.
