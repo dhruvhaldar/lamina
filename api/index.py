@@ -126,6 +126,10 @@ def read_root():
         return FileResponse('public/index.html')
     return {"message": "Welcome to Lamina API. Frontend not found."}
 
+
+ALLOWED_EXTENSIONS = {'.html', '.css', '.js', '.json', '.png', '.jpg', '.jpeg', '.svg', '.ico', '.map'}
+
+
 @app.get("/{filename}")
 def read_file(filename: str):
     base_dir = os.path.realpath("public")
@@ -135,6 +139,11 @@ def read_file(filename: str):
     # os.path.commonpath correctly resolves symlinks and ..
     if os.path.commonpath([base_dir, requested_path]) != base_dir:
         raise HTTPException(status_code=403, detail="Access denied")
+
+    # Verify file extension (Security Enhancement)
+    _, ext = os.path.splitext(requested_path)
+    if ext.lower() not in ALLOWED_EXTENSIONS:
+        raise HTTPException(status_code=403, detail="File type not allowed")
 
     if not (os.path.exists(requested_path) and os.path.isfile(requested_path)):
         raise HTTPException(status_code=404, detail="File not found")
