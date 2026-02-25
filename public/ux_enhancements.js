@@ -55,17 +55,32 @@ function initStackPreview() {
         const symmetric = symInput.checked;
         const plyThick = parseFloat(thickInput.value) || 0;
 
-        const plies = stackStr.split(',').filter(s => s.trim() !== '');
-        if (plies.length === 0) {
+        const rawPlies = stackStr.split(',').map(s => s.trim()).filter(s => s !== '');
+
+        if (rawPlies.length === 0) {
             preview.textContent = '';
+            preview.style.color = '';
+            stackInput.removeAttribute('aria-invalid');
             return;
         }
 
-        const count = plies.length * (symmetric ? 2 : 1);
+        // Validate
+        for (const ply of rawPlies) {
+            if (isNaN(ply)) {
+                preview.textContent = `Invalid angle: "${ply}"`;
+                preview.style.color = '#c0392b'; // Error red
+                stackInput.setAttribute('aria-invalid', 'true');
+                return;
+            }
+        }
+
+        const count = rawPlies.length * (symmetric ? 2 : 1);
         const totalThick = count * plyThick;
-        const code = `[${plies.map(s => s.trim()).join('/')}]${symmetric ? 's' : 'T'}`;
+        const code = `[${rawPlies.join('/')}]${symmetric ? 's' : 'T'}`;
 
         preview.textContent = `${code} • ${formatMetric(totalThick, 'm')}`;
+        preview.style.color = '';
+        stackInput.removeAttribute('aria-invalid');
     };
 
     stackInput.addEventListener('input', update);
