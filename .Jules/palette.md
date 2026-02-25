@@ -40,3 +40,7 @@
 ## 2026-02-24 - Keyboard Efficiency
 **Learning:** Power users (engineers) find repetitive mouse clicks for calculation inefficient and prefer keyboard-first workflows.
 **Action:** Implement global keyboard shortcuts (e.g., Ctrl+Enter) with discoverable visual hints (badges) on the primary action buttons.
+
+## 2026-02-25 - Real-time Input Validation
+**Learning:** Validating complex inputs (like lists) only on submission frustrates users who must correct errors after the fact.
+**Action:** Implement real-time validation in input previews to provide immediate, specific error feedback (e.g. "Invalid angle") before submission.
