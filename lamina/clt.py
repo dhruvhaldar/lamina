@@ -227,36 +227,31 @@ class Laminate:
         angles = np.arange(0, 360, step)
         h = self.total_thickness
 
-        # Vectorized transformation: returns (N, 3, 3)
-        # Calculate transformation matrices once for all angles
-        T_sigma, T_epsilon_inv = _get_transformation_matrices(angles)
+        # Optimization: Directly transform compliance matrix components instead of
+        # transforming stiffness (ABD), assembling 6x6, and inverting it N times.
+        # This reduces complexity from O(N * 6^3) to O(N * 3^3).
 
-        A_prime = _apply_transformation(self.A, T_sigma, T_epsilon_inv)
-        B_prime = _apply_transformation(self.B, T_sigma, T_epsilon_inv)
-        D_prime = _apply_transformation(self.D, T_sigma, T_epsilon_inv)
+        # We need to transform the compliance matrix 'abd'.
+        # The transformation rule for compliance S is S' = T_epsilon @ S @ T_sigma^-1
+        # where T_epsilon is the strain transformation matrix and T_sigma is stress transformation.
 
-        # Assemble rotated ABD: (N, 6, 6)
-        # Build block matrix for each angle
-        # concatenate along axis 2 (columns) then axis 1 (rows)
-        # Note: input shapes are (N, 3, 3)
-        top = np.concatenate([A_prime, B_prime], axis=2)
-        bottom = np.concatenate([B_prime, D_prime], axis=2)
-        ABD_prime = np.concatenate([top, bottom], axis=1)
+        # We can obtain T_epsilon and T_sigma^-1 by calling _get_transformation_matrices with -angles.
+        # _get_transformation_matrices(theta) returns (T_sigma(theta), T_epsilon_inv(theta)).
+        # T_sigma(-theta) = T_sigma(theta)^-1  (Inverse of stress transformation)
+        # T_epsilon_inv(-theta) = T_epsilon(theta) (Strain transformation)
 
-        # Invert to get compliance: (N, 6, 6)
-        try:
-            abd_prime = np.linalg.inv(ABD_prime)
-        except np.linalg.LinAlgError:
-            abd_prime = np.zeros_like(ABD_prime)
+        T_sigma_inv, T_epsilon = _get_transformation_matrices(-angles)
 
-        # Calculate engineering constants from compliance
-        # a is top-left 3x3 block of abd_prime
-        # abd_prime shape is (N, 6, 6)
-        # We need elements (N,)
+        # We only need the top-left 3x3 block of the transformed compliance matrix (a')
+        # to calculate in-plane engineering constants (Ex, Ey, Gxy).
+        # a' = T_epsilon @ a @ T_sigma_inv
+        a = self.abd[:3, :3]
+        a_prime = _apply_transformation(a, T_epsilon, T_sigma_inv)
 
-        a00 = abd_prime[:, 0, 0]
-        a11 = abd_prime[:, 1, 1]
-        a22 = abd_prime[:, 2, 2]
+        # Extract elements from transformed 3x3 compliance blocks
+        a00 = a_prime[:, 0, 0]
+        a11 = a_prime[:, 1, 1]
+        a22 = a_prime[:, 2, 2]
 
         # Initialize arrays
         Ex = np.zeros_like(a00)
