@@ -66,3 +66,32 @@ def test_valid_file_access():
     assert isinstance(response, FileResponse)
     # Use realpath to be safe in comparison
     assert os.path.realpath(response.path) == os.path.realpath("public/index.html")
+
+def test_blocked_file_extension():
+    """
+    Test that files with disallowed extensions are blocked even if they exist in public/.
+    """
+    filename = "test_forbidden.txt"
+    filepath = os.path.join("public", filename)
+
+    # Ensure public dir exists
+    if not os.path.exists("public"):
+        os.makedirs("public")
+
+    # Create a dummy .txt file
+    with open(filepath, "w") as f:
+        f.write("This should not be accessible.")
+
+    try:
+        # Try to access the file
+        # Expect 403 Forbidden because .txt is not allowed
+        with pytest.raises(HTTPException) as excinfo:
+            read_file(filename)
+
+        assert excinfo.value.status_code == 403
+        assert excinfo.value.detail == "File type not allowed"
+
+    finally:
+        # Cleanup
+        if os.path.exists(filepath):
+            os.remove(filepath)
