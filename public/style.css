@@ -235,3 +235,36 @@ input:focus-visible, button:focus-visible {
     font-family: monospace;
     vertical-align: middle;
 }
+
+/* Palette: Ply Stack Preview */
+.ply-badge {
+    display: inline-flex;
+    align-items: center;
+    background: #e1f5fe;
+    border: 1px solid #b3e5fc;
+    color: #0277bd;
+    border-radius: 12px;
+    padding: 2px 8px;
+    margin: 2px;
+    font-size: 0.85em;
+    font-family: monospace;
+}
+
+.ply-icon {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    margin-right: 6px;
+    position: relative;
+}
+
+.ply-icon::before {
+    content: '';
+    position: absolute;
+    top: 4px;
+    left: 0;
+    width: 10px;
+    height: 2px;
+    background-color: currentColor;
+    /* Rotation will be applied inline via JS */
+}

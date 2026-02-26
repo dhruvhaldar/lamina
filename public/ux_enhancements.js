@@ -46,20 +46,22 @@ function initStackPreview() {
     if (!stackInput || !symInput || !thickInput) return;
 
     const label = stackInput.parentElement;
-    const preview = document.createElement('span');
+    const preview = document.createElement('div');
     preview.className = 'input-preview';
-    label.insertBefore(preview, stackInput);
+    preview.style.float = 'none'; // Override float for stack preview
+    preview.style.marginTop = '8px';
+    label.appendChild(preview);
 
     const update = () => {
         const stackStr = stackInput.value;
         const symmetric = symInput.checked;
         const plyThick = parseFloat(thickInput.value) || 0;
 
-        const rawPlies = stackStr.split(',').map(s => s.trim()).filter(s => s !== '');
+        // Split by comma or space for better UX
+        const rawPlies = stackStr.split(/[\s,]+/).filter(s => s !== '');
 
         if (rawPlies.length === 0) {
-            preview.textContent = '';
-            preview.style.color = '';
+            preview.innerHTML = '';
             stackInput.removeAttribute('aria-invalid');
             return;
         }
@@ -74,11 +76,20 @@ function initStackPreview() {
             }
         }
 
+        // Generate visual badges
+        const badges = rawPlies.map(angle => {
+            // Composite angle (CCW) vs CSS rotation (CW)
+            // 0 deg = horizontal. 90 deg = vertical.
+            return `<span class="ply-badge">
+                <span class="ply-icon" style="transform: rotate(-${angle}deg)"></span>${angle}°
+            </span>`;
+        }).join('');
+
         const count = rawPlies.length * (symmetric ? 2 : 1);
         const totalThick = count * plyThick;
-        const code = `[${rawPlies.join('/')}]${symmetric ? 's' : 'T'}`;
+        const thicknessText = `<span style="margin-left: 8px; font-weight: bold; color: #555;">Total: ${formatMetric(totalThick, 'm')} (${symmetric ? 'Sym' : 'Total'})</span>`;
 
-        preview.textContent = `${code} • ${formatMetric(totalThick, 'm')}`;
+        preview.innerHTML = badges + thicknessText;
         preview.style.color = '';
         stackInput.removeAttribute('aria-invalid');
     };
