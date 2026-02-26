@@ -4,6 +4,7 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel, field_validator, model_validator
 from typing import List, Dict, Optional
 import os
+import math
 
 from lamina.materials import Material
 from lamina.clt import Laminate
@@ -25,8 +26,24 @@ class MaterialModel(BaseModel):
     @field_validator('E1', 'E2', 'G12')
     @classmethod
     def check_positive(cls, v: float) -> float:
+        if math.isnan(v) or math.isinf(v):
+            raise ValueError('Must be a finite number')
         if v <= 0:
             raise ValueError('Must be positive')
+        return v
+
+    @field_validator('v12')
+    @classmethod
+    def check_finite(cls, v: float) -> float:
+        if math.isnan(v) or math.isinf(v):
+            raise ValueError('Must be a finite number')
+        return v
+
+    @field_validator('name')
+    @classmethod
+    def check_name(cls, v: str) -> str:
+        if len(v) > 100:
+            raise ValueError('Name too long (max 100 chars)')
         return v
 
     @model_validator(mode='after')
@@ -73,6 +90,8 @@ class LimitsModel(BaseModel):
     @field_validator('xt', 'xc', 'yt', 'yc', 's')
     @classmethod
     def check_positive(cls, v: float) -> float:
+        if math.isnan(v) or math.isinf(v):
+            raise ValueError('Must be a finite number')
         if v <= 0:
             raise ValueError('Must be positive')
         return v
