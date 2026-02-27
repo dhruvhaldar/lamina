@@ -44,3 +44,7 @@
 ## 2026-02-25 - Real-time Input Validation
 **Learning:** Validating complex inputs (like lists) only on submission frustrates users who must correct errors after the fact.
 **Action:** Implement real-time validation in input previews to provide immediate, specific error feedback (e.g. "Invalid angle") before submission.
+
+## 2026-02-26 - Accessible Error States
+**Learning:** Setting `aria-invalid="true"` alone is insufficient; sighted users need corresponding visual cues to identify the exact field in error among many inputs.
+**Action:** Always pair `aria-invalid` attributes with global CSS rules that apply a visible error state (e.g., red border/outline) to ensure all users receive equivalent feedback.
