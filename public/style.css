@@ -158,6 +158,14 @@ input:focus-visible, button:focus-visible {
     outline-offset: 2px;
 }
 
+input[aria-invalid="true"] {
+    border-color: #c0392b;
+}
+
+input[aria-invalid="true"]:focus-visible {
+    outline-color: #c0392b;
+}
+
 /* Empty State */
 .empty-state {
     color: #6c757d;
