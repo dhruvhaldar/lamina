@@ -133,6 +133,7 @@ class GeneticAlgorithm:
         self.pop_size = population_size
         self.generations = generations
         self.valid_angles = [0, 45, -45, 90]
+        self._eval_cache = {}
 
     def optimize(self, min_plies=4, max_plies=16):
         # Try finding min weight
@@ -197,6 +198,11 @@ class GeneticAlgorithm:
             stack[idx] = random.choice(self.valid_angles)
 
     def _evaluate(self, half_stack):
+        # Check cache first to avoid redundant evaluations
+        cache_key = tuple(half_stack)
+        if cache_key in self._eval_cache:
+            return self._eval_cache[cache_key]
+
         full_stack = half_stack + half_stack[::-1]
         lam = Laminate(self.material, full_stack, symmetry=False)
 
@@ -209,6 +215,7 @@ class GeneticAlgorithm:
              crit_load, _ = BucklingAnalysis.critical_load(lam, a, b)
              req = self.constraints['buckling_load']
              if crit_load < req:
+                 self._eval_cache[cache_key] = -1.0
                  return -1.0 # Invalid
              score += (crit_load / req) * 0.1 # Add bonus for extra buckling
 
@@ -219,7 +226,9 @@ class GeneticAlgorithm:
             sf = calculate_safety_factor(lam, self.load, limits)
 
             if sf < sf_req:
+                self._eval_cache[cache_key] = -1.0
                 return -1.0
             score += sf # Maximize safety factor
 
+        self._eval_cache[cache_key] = score
         return score

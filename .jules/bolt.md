@@ -41,3 +41,7 @@
 ## 2026-03-24 - [Direct Compliance Transformation]
 **Learning:** Inverting the 6x6 ABD matrix for every angle in a polar plot (O(N * 6^3)) is computationally expensive and unnecessary when only in-plane properties are needed. Transforming the compliance matrix components directly (O(N * 3^3)) using the appropriate transformation rules ($S' = T_{\epsilon} S T_{\sigma}^{-1}$) yields a ~9x speedup.
 **Action:** When calculating direction-dependent properties, transform the compliance matrix directly instead of transforming stiffness and inverting, especially if full coupling is not required or can be handled block-wise.
+
+## 2026-03-26 - [Genetic Algorithm Evaluation Cache]
+**Learning:** In the Genetic Algorithm implementation for laminate optimization, elitism and crossover/mutation mechanisms cause identical laminate stacks to be evaluated frequently. Calculating the laminate properties, buckling load, and safety factors is computationally expensive, leading to >90% redundant work during standard runs.
+**Action:** Use a memoization approach (dictionary with a tuple of the ply stack as the key) to cache stack evaluation results across generations. This directly avoids re-calculating the expensive steps for previously seen stacks.
