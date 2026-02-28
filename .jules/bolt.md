@@ -45,3 +45,11 @@
 ## 2026-03-26 - [Genetic Algorithm Evaluation Cache]
 **Learning:** In the Genetic Algorithm implementation for laminate optimization, elitism and crossover/mutation mechanisms cause identical laminate stacks to be evaluated frequently. Calculating the laminate properties, buckling load, and safety factors is computationally expensive, leading to >90% redundant work during standard runs.
 **Action:** Use a memoization approach (dictionary with a tuple of the ply stack as the key) to cache stack evaluation results across generations. This directly avoids re-calculating the expensive steps for previously seen stacks.
+
+## 2026-04-03 - [Material Property Q Matrix Cache]
+**Learning:** Recalculating the Material Q Matrix continuously inside tight loops caused an observable performance drop.
+**Action:** Cache the invariant NumPy matrix using a lazy evaluation property and protect it from mutation with `.setflags(write=False)`.
+
+## 2026-04-03 - [Numpy Array Concatenation Overhead]
+**Learning:** Array concatenations inside tight loops like `calculate_safety_factor` add an unnecessary overhead.
+**Action:** Prefer instantiating an array with elements already passed in the desired final dimensions (`np.array([a, b, c, 0.0, 0.0, 0.0])`) over concatenating arrays.

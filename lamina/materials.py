@@ -57,16 +57,19 @@ class Material:
         Returns:
             np.ndarray: 3x3 reduced stiffness matrix.
         """
-        denom = 1 - self.v12 * self.v21
-        Q11 = self.E1 / denom
-        Q22 = self.E2 / denom
-        Q12 = (self.v12 * self.E2) / denom
-        Q66 = self.G12
-        return np.array([
-            [Q11, Q12, 0],
-            [Q12, Q22, 0],
-            [0, 0, Q66]
-        ])
+        if not hasattr(self, '_Q_cache'):
+            denom = 1 - self.v12 * self.v21
+            Q11 = self.E1 / denom
+            Q22 = self.E2 / denom
+            Q12 = (self.v12 * self.E2) / denom
+            Q66 = self.G12
+            self._Q_cache = np.array([
+                [Q11, Q12, 0],
+                [Q12, Q22, 0],
+                [0, 0, Q66]
+            ])
+            self._Q_cache.setflags(write=False)
+        return self._Q_cache
 
 class CarbonEpoxy(Material):
     """

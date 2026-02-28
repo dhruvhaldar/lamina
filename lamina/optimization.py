@@ -13,9 +13,8 @@ def calculate_safety_factor(laminate, load, limits):
     Nxy = load.get('Nxy', 0)
 
     ABD_inv = laminate.abd
-    N = np.array([Nx, Ny, Nxy])
-    M = np.zeros(3)
-    NM = np.concatenate([N, M])
+    # Direct array construction is faster than concatenate
+    NM = np.array([Nx, Ny, Nxy, 0.0, 0.0, 0.0])
     strain_curv = ABD_inv @ NM
     eps0 = strain_curv[:3]
     kap = strain_curv[3:]
