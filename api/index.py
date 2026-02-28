@@ -1,8 +1,10 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
-from pydantic import BaseModel, field_validator, model_validator
-from typing import List, Dict, Optional
+from pydantic import BaseModel, field_validator, model_validator, ValidationError
+from fastapi.responses import JSONResponse
+from fastapi.exceptions import RequestValidationError
+from typing import List, Dict, Optional, Any
 import os
 import math
 
@@ -14,6 +16,23 @@ from api.middleware import SecurityHeadersMiddleware, RateLimitMiddleware
 app = FastAPI()
 app.add_middleware(RateLimitMiddleware, limit=100, window=60)
 app.add_middleware(SecurityHeadersMiddleware)
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request, exc):
+    errors = exc.errors()
+    # Sanitize input values that might be NaN/Inf to prevent JSON serialization errors
+    for error in errors:
+        val = error.get('input')
+        if isinstance(val, float) and (math.isnan(val) or math.isinf(val)):
+            error['input'] = str(val)
+        # Ensure ctx values (like ValueError) are converted to string
+        if 'ctx' in error and 'error' in error['ctx']:
+            error['ctx']['error'] = str(error['ctx']['error'])
+
+    return JSONResponse(
+        status_code=422,
+        content={"detail": errors},
+    )
 
 # Pydantic models
 class MaterialModel(BaseModel):
@@ -64,18 +83,43 @@ class LaminateModel(BaseModel):
     symmetry: bool = False
     thickness: float = 0.125e-3
 
-    @field_validator('stack')
+    @field_validator('stack', mode='before')
     @classmethod
-    def check_stack_size(cls, v: List[float]) -> List[float]:
-        if len(v) > 200:
-             raise ValueError('Stack too large (max 200 plies)')
-        if len(v) == 0:
-             raise ValueError('Stack cannot be empty')
+    def check_stack_size(cls, v: Any) -> Any:
+        if isinstance(v, list):
+            if len(v) > 200:
+                 raise ValueError('Stack too large (max 200 plies)')
+            if len(v) == 0:
+                 raise ValueError('Stack cannot be empty')
+            for val in v:
+                 try:
+                     fval = float(val)
+                     if math.isnan(fval) or math.isinf(fval):
+                          raise ValueError('Must be a finite number')
+                 except (TypeError, ValueError) as e:
+                     if 'Must be a finite number' in str(e):
+                         raise
+                     pass
         return v
 
-    @field_validator('thickness')
+    @field_validator('thickness', mode='before')
     @classmethod
-    def check_thickness(cls, v: float) -> float:
+    def check_thickness(cls, v: Any) -> Any:
+        try:
+            fval = float(v)
+            if math.isnan(fval) or math.isinf(fval):
+                 raise ValueError('Must be a finite number')
+        except (TypeError, ValueError) as e:
+            if 'Must be a finite number' in str(e):
+                raise
+            pass
+
+        # Pydantic will coerce after this step, and then we need the > 0 check
+        return v
+
+    @field_validator('thickness', mode='after')
+    @classmethod
+    def check_thickness_positive(cls, v: float) -> float:
         if v <= 0:
              raise ValueError('Thickness must be positive')
         return v
