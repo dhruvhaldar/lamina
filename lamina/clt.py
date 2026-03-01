@@ -272,13 +272,16 @@ class Laminate:
         mask22 = a22 != 0
         Gxy[mask22] = 1 / (h * a22[mask22])
 
-        results = []
-        for i, angle in enumerate(angles):
-            results.append({
-                "angle": float(angle),
-                "Ex": float(Ex[i]),
-                "Ey": float(Ey[i]),
-                "Gxy": float(Gxy[i])
-            })
+        # Optimization: Converting arrays to lists and zipping them in a list comprehension
+        # is significantly faster than looping over the arrays and calling float() on each element.
+        angles_list = angles.tolist()
+        Ex_list = Ex.tolist()
+        Ey_list = Ey.tolist()
+        Gxy_list = Gxy.tolist()
+
+        results = [
+            {"angle": a, "Ex": ex, "Ey": ey, "Gxy": gxy}
+            for a, ex, ey, gxy in zip(angles_list, Ex_list, Ey_list, Gxy_list)
+        ]
 
         return PolarResult(results)
