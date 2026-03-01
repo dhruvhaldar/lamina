@@ -48,3 +48,6 @@
 ## 2026-02-26 - Accessible Error States
 **Learning:** Setting `aria-invalid="true"` alone is insufficient; sighted users need corresponding visual cues to identify the exact field in error among many inputs.
 **Action:** Always pair `aria-invalid` attributes with global CSS rules that apply a visible error state (e.g., red border/outline) to ensure all users receive equivalent feedback.
+## 2026-03-01 - Tactile Feedback and Consistency
+**Learning:** Users lack immediate visual confirmation when clicking buttons, and native `select` elements appear unstyled and lack clear keyboard focus indicators compared to text inputs.
+**Action:** Add `button:active { transform: scale(0.98); }` for click feedback and apply consistent styling and `:focus-visible` outlines to `select` elements.

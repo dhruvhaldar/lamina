@@ -36,7 +36,7 @@ label {
     margin-bottom: 5px;
     font-weight: bold;
 }
-input {
+input, select {
     width: 100%;
     padding: 8px;
     border: 1px solid #ccc;
@@ -54,6 +54,9 @@ button {
 }
 button:hover {
     background: #2980b9;
+}
+button:active {
+    transform: scale(0.98);
 }
 .results {
     display: grid;
@@ -153,7 +156,7 @@ button:disabled {
 }
 
 /* Accessibility Focus States */
-input:focus-visible, button:focus-visible {
+input:focus-visible, button:focus-visible, select:focus-visible {
     outline: 2px solid #3498db;
     outline-offset: 2px;
 }
