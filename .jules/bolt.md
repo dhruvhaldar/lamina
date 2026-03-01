@@ -53,3 +53,6 @@
 ## 2026-04-03 - [Numpy Array Concatenation Overhead]
 **Learning:** Array concatenations inside tight loops like `calculate_safety_factor` add an unnecessary overhead.
 **Action:** Prefer instantiating an array with elements already passed in the desired final dimensions (`np.array([a, b, c, 0.0, 0.0, 0.0])`) over concatenating arrays.
+## 2026-03-01 - [Polar Stiffness List Comprehension Optimization]
+**Learning:** Creating dictionaries and appending them to a list inside a Python loop (e.g., in `polar_stiffness` for 360 angles) is slow. Using `.tolist()` on numpy arrays combined with a list comprehension and `zip` eliminates the overhead of accessing individual numpy array elements and casting them to Python floats, resulting in a ~3x speedup.
+**Action:** When converting multiple parallel numpy arrays into a list of dictionaries, use `list(zip(arr1.tolist(), ...))` within a list comprehension.
