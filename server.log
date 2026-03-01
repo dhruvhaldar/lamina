@@ -1,10 +1,16 @@
-INFO:     Started server process [3113]
+INFO:     Started server process [4412]
 INFO:     Waiting for application startup.
 INFO:     Application startup complete.
 INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
-INFO:     127.0.0.1:39930 - "GET / HTTP/1.1" 200 OK
-INFO:     127.0.0.1:39930 - "GET /style.css HTTP/1.1" 200 OK
-INFO:     127.0.0.1:39940 - "GET /polar_plot.js HTTP/1.1" 200 OK
-INFO:     127.0.0.1:39946 - "GET /failure_envelope.js HTTP/1.1" 200 OK
-INFO:     127.0.0.1:39974 - "GET /main.js HTTP/1.1" 200 OK
-INFO:     127.0.0.1:39958 - "GET /ux_enhancements.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53182 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53182 - "GET /style.css HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53196 - "GET /polar_plot.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53206 - "GET /ux_enhancements.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53200 - "GET /failure_envelope.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53210 - "GET /main.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34446 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34446 - "GET /style.css HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34452 - "GET /polar_plot.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34484 - "GET /main.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34472 - "GET /ux_enhancements.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34458 - "GET /failure_envelope.js HTTP/1.1" 200 OK
