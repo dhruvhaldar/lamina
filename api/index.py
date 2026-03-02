@@ -179,9 +179,7 @@ def failure(req: FailureRequest):
 
 # Serve static files
 # In Vercel, static files are usually handled by the platform or placed in public/
-# But for local testing, we mount it.
-if os.path.exists("public"):
-    app.mount("/static", StaticFiles(directory="public"), name="static")
+# We rely on the custom /{filename} route below to serve static files securely.
 
 @app.get("/")
 def read_root():
