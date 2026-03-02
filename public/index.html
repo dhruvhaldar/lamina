@@ -8,7 +8,7 @@
     <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js" integrity="sha384-CjloA8y00+1SDAUkjs099PVfnY2KmDC2BZnws9kh8D/lX1s46w6EPhpXdqMfjK6i" crossorigin="anonymous"></script>
 </head>
 <body>
-    <div class="container">
+    <main class="container">
         <h1>Lamina</h1>
         <p>Composite Laminate Design & Analysis</p>
 
@@ -69,9 +69,9 @@
                 <div id="envelope-plot" class="empty-state">Plot envelope to visualize failure limits.</div>
             </div>
         </div>
-    </div>
+    </main>
 
-    <div id="toast-container"></div>
+    <div id="toast-container" aria-live="polite" aria-atomic="true"></div>
     <script src="polar_plot.js"></script>
     <script src="failure_envelope.js"></script>
     <script src="ux_enhancements.js"></script>
