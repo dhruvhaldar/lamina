@@ -53,12 +53,10 @@ def _get_transformation_matrices(angle_deg):
 def _apply_transformation(Q, T_sigma, T_epsilon_inv):
     """
     Applies transformation: Q' = T_sigma @ Q @ T_epsilon_inv.
-    Handles broadcasting if T matrices are stacked.
+    Handles broadcasting natively if T matrices are stacked (N, 3, 3).
     """
-    if T_sigma.ndim == 3:
-        # Vectorized case: (N, 3, 3) @ (3, 3) @ (N, 3, 3) -> (N, 3, 3)
-        # Using einsum avoids large intermediate array allocation and is ~3x faster for this shape
-        return np.einsum('nij,jk,nkl->nil', T_sigma, Q, T_epsilon_inv)
+    # Optimization: Native matmul (@) with broadcasting is significantly faster
+    # than np.einsum for these (N, 3, 3) shapes in modern numpy versions.
     return T_sigma @ Q @ T_epsilon_inv
 
 

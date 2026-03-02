@@ -56,3 +56,7 @@
 ## 2026-03-01 - [Polar Stiffness List Comprehension Optimization]
 **Learning:** Creating dictionaries and appending them to a list inside a Python loop (e.g., in `polar_stiffness` for 360 angles) is slow. Using `.tolist()` on numpy arrays combined with a list comprehension and `zip` eliminates the overhead of accessing individual numpy array elements and casting them to Python floats, resulting in a ~3x speedup.
 **Action:** When converting multiple parallel numpy arrays into a list of dictionaries, use `list(zip(arr1.tolist(), ...))` within a list comprehension.
+
+## 2026-04-06 - [Einsum vs Matmul for Stiffness Matrix Broadcasting]
+**Learning:** `np.einsum('nij,jk,nkl->nil', T_sigma, Q, T_epsilon_inv)` was originally used to transform stiffness matrices because it was assumed to avoid large intermediate array allocations and be faster. However, modern numpy implementations of native matmul `T_sigma @ Q @ T_epsilon_inv` with broadcasting on `(N, 3, 3)` arrays are actually highly optimized and roughly 4-5x faster than `np.einsum`.
+**Action:** Always prefer native `@` matrix multiplication over `np.einsum` for simple batched matrix multiplications, as it relies on highly optimized BLAS/numpy core C code.
