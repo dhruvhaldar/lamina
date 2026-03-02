@@ -42,3 +42,8 @@
 **Vulnerability:** Adding an SRI `integrity` attribute to an external script without pinning its version (e.g., `https://d3js.org/d3.v7.min.js`) means that upstream minor or patch updates to the floating version tag will silently alter the file content. This results in an immediate hash mismatch, causing browsers to block the script and breaking application functionality (Availability loss).
 **Learning:** Security enhancements like Subresource Integrity must be paired with operational stability. Immutable, pinned versions are a prerequisite for SRI.
 **Prevention:** Always ensure the external script URL points to an immutable, strictly pinned version (e.g., `https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js`) when adding an SRI hash, and remember to update `Content-Security-Policy` `script-src` directives to allow the new host.
+
+## 2026-11-06 - [Secondary Route Bypass via StaticFiles Mount]
+**Vulnerability:** A custom endpoint `/{filename}` was implemented with strong validation (path traversal protection and strict file extension whitelisting). However, `app.mount("/static", StaticFiles(directory="public"))` was also present, which served the exact same directory but without enforcing the `ALLOWED_EXTENSIONS` rules. This allowed attackers to bypass the file extension restrictions by simply using the `/static/...` route instead of the root route.
+**Learning:** When securing file serving with custom logic, ensure no secondary routes or broad middleware (like `StaticFiles` mounts) inadvertently expose the same resources without the same security controls (Secondary Route Bypass).
+**Prevention:** Remove redundant static mounts that bypass custom security validation logic, or ensure all routes serving the same resource apply the same validation.
