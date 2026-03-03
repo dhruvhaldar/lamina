@@ -94,8 +94,8 @@ function formatEngineeringConstants(props) {
                 </svg>
                 Copy
             </button>
-            <div class="clipboard-data" style="display:none; white-space: pre;">${copyText}</div>
-            <div class="input-grid" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));">
+            <div class="clipboard-data">${copyText}</div>
+            <div class="input-grid results-grid">
                 ${items.map(item => `
                     <div class="result-item" title="${item.title}">
                         <strong>${item.label}:</strong> ${item.convert(item.value)}
