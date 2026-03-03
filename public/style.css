@@ -279,3 +279,26 @@ input[aria-invalid="true"]:focus-visible {
     background-color: currentColor;
     /* Rotation will be applied inline via JS */
 }
+
+/* Material Select Wrapper */
+.material-select-wrapper {
+    margin-bottom: 15px;
+}
+
+/* Thickness Hint */
+.thickness-hint {
+    margin-left: 8px;
+    font-weight: bold;
+    color: #555;
+}
+
+/* Clipboard Data */
+.clipboard-data {
+    display: none;
+    white-space: pre;
+}
+
+/* Results Grid */
+.results-grid {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}

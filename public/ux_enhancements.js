@@ -81,15 +81,19 @@ function initStackPreview() {
             // Composite angle (CCW) vs CSS rotation (CW)
             // 0 deg = horizontal. 90 deg = vertical.
             return `<span class="ply-badge">
-                <span class="ply-icon" style="transform: rotate(-${angle}deg)"></span>${angle}°
+                <span class="ply-icon" data-angle="${angle}"></span>${angle}°
             </span>`;
         }).join('');
 
         const count = rawPlies.length * (symmetric ? 2 : 1);
         const totalThick = count * plyThick;
-        const thicknessText = `<span style="margin-left: 8px; font-weight: bold; color: #555;">Total: ${formatMetric(totalThick, 'm')} (${symmetric ? 'Sym' : 'Total'})</span>`;
+        const thicknessText = `<span class="thickness-hint">Total: ${formatMetric(totalThick, 'm')} (${symmetric ? 'Sym' : 'Total'})</span>`;
 
         preview.innerHTML = badges + thicknessText;
+
+        preview.querySelectorAll('.ply-icon').forEach((icon) => {
+            icon.style.transform = `rotate(-${icon.getAttribute('data-angle')}deg)`;
+        });
         preview.style.color = '';
         stackInput.removeAttribute('aria-invalid');
     };
