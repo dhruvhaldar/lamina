@@ -51,3 +51,7 @@
 ## 2026-03-01 - Tactile Feedback and Consistency
 **Learning:** Users lack immediate visual confirmation when clicking buttons, and native `select` elements appear unstyled and lack clear keyboard focus indicators compared to text inputs.
 **Action:** Add `button:active { transform: scale(0.98); }` for click feedback and apply consistent styling and `:focus-visible` outlines to `select` elements.
+
+## 2026-03-02 - Accessible Color Contrast in Primary/Success States
+**Learning:** Default primary action blues (e.g., `#3498db`) and success greens (e.g., `#27ae60`) often fail WCAG AA 4.5:1 contrast requirements when used as text colors on light backgrounds, making error/success states or badges illegible.
+**Action:** Always verify contrast ratios for dynamic textual feedback and explicitly darken brand or standard colors (e.g., using `#2579b0` for primary, `#1e8449` for success) to ensure readability for all users.
