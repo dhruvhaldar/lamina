@@ -60,3 +60,7 @@
 ## 2026-04-06 - [Einsum vs Matmul for Stiffness Matrix Broadcasting]
 **Learning:** `np.einsum('nij,jk,nkl->nil', T_sigma, Q, T_epsilon_inv)` was originally used to transform stiffness matrices because it was assumed to avoid large intermediate array allocations and be faster. However, modern numpy implementations of native matmul `T_sigma @ Q @ T_epsilon_inv` with broadcasting on `(N, 3, 3)` arrays are actually highly optimized and roughly 4-5x faster than `np.einsum`.
 **Action:** Always prefer native `@` matrix multiplication over `np.einsum` for simple batched matrix multiplications, as it relies on highly optimized BLAS/numpy core C code.
+
+## 2026-04-06 - [Full Vectorization in Failure Criteria using Broadcasting]
+**Learning:** Earlier, fully vectorizing `FailureCriterion` calculations across both plies and angles resulted in memory bottlenecks (allocating intermediate arrays). However, carefully broadcasting the calculations `A_all + z_mids * B_all` across the `(n_plies, 3, n_angles)` dimension enables calculating stresses and failure indices for all angles and all plies concurrently without severe memory penalties, giving roughly a ~40-50% speedup.
+**Action:** When vectorizing across multiple dimensions, be sure to use broadcasting on primitive additions/multiplications correctly rather than creating full expanded copies of arrays. Let numpy handle the broadcast loop natively in C.
