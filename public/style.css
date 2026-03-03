@@ -43,7 +43,7 @@ input, select {
     border-radius: 4px;
 }
 button {
-    background: #3498db;
+    background: #2579b0;
     color: white;
     border: none;
     padding: 10px 20px;
@@ -53,7 +53,7 @@ button {
     margin-right: 10px;
 }
 button:hover {
-    background: #2980b9;
+    background: #1f6595;
 }
 button:active {
     transform: scale(0.98);
@@ -120,7 +120,7 @@ button:disabled {
     opacity: 1;
     transition: opacity 0.3s ease-in;
     font-size: 14px;
-    border-left: 4px solid #3498db;
+    border-left: 4px solid #2579b0;
 }
 
 .toast.error {
@@ -132,7 +132,7 @@ button:disabled {
 .toast.success {
     border-left-color: #2ecc71;
     background: #f0fdf4;
-    color: #27ae60;
+    color: #1e8449;
 }
 
 @keyframes slideIn {
@@ -157,7 +157,7 @@ button:disabled {
 
 /* Accessibility Focus States */
 input:focus-visible, button:focus-visible, select:focus-visible {
-    outline: 2px solid #3498db;
+    outline: 2px solid #2579b0;
     outline-offset: 2px;
 }
 
@@ -171,7 +171,7 @@ input[aria-invalid="true"]:focus-visible {
 
 /* Empty State */
 .empty-state {
-    color: #6c757d;
+    color: #5c636a;
     background-color: #f8f9fa;
     border: 2px dashed #dee2e6;
     border-radius: 6px;
@@ -227,7 +227,7 @@ input[aria-invalid="true"]:focus-visible {
 /* Palette: Input Preview */
 .input-preview {
     float: right;
-    color: #3498db;
+    color: #2579b0;
     font-size: 0.9em;
     font-weight: normal;
     pointer-events: none;
@@ -253,7 +253,7 @@ input[aria-invalid="true"]:focus-visible {
     align-items: center;
     background: #e1f5fe;
     border: 1px solid #b3e5fc;
-    color: #0277bd;
+    color: #01579b;
     border-radius: 12px;
     padding: 2px 8px;
     margin: 2px;

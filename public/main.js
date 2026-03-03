@@ -131,8 +131,8 @@ async function copyToClipboard(btn) {
             </svg>
             Copied!
         `;
-        btn.style.color = '#27ae60';
-        btn.style.borderColor = '#27ae60';
+        btn.style.color = '#1e8449';
+        btn.style.borderColor = '#1e8449';
 
         setTimeout(() => {
             btn.innerHTML = originalContent;
