@@ -65,6 +65,6 @@ function drawPolar(data) {
         .attr("class", "line")
         .attr("d", line)
         .style("fill", "rgba(52, 152, 219, 0.3)")
-        .style("stroke", "#3498db")
+        .style("stroke", "#2579b0")
         .style("stroke-width", 2);
 }
