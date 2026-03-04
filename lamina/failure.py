@@ -45,14 +45,10 @@ class FailureCriterion:
         """
         sx_unit = np.cos(angles)
         sy_unit = np.sin(angles)
-        txy_unit = np.zeros_like(angles)
 
-        # N shape: (3, n_angles)
-        N = np.vstack([sx_unit, sy_unit, txy_unit]) * h
-        # M shape: (3, n_angles)
-        M = np.zeros_like(N)
-
-        NM = np.vstack([N, M]) # (6, n_angles)
+        NM = np.zeros((6, len(angles)))
+        NM[0, :] = sx_unit * h
+        NM[1, :] = sy_unit * h
 
         # strain_curvature: (6, n_angles)
         strain_curvature = laminate.abd @ NM
@@ -61,45 +57,37 @@ class FailureCriterion:
 
         Q = laminate.material.Q() # (3, 3)
 
-        # Cache for angle-dependent terms to avoid redundant calculations
-        # Key: angle, Value: (A_term, B_term) where s = A_term + z * B_term
-        angle_cache = {}
-        unique_angles = set(laminate.stack)
+        # Use precomputed trig values from laminate.c and laminate.s
+        c = laminate.c
+        s = laminate.s
 
-        for angle in unique_angles:
-            theta = np.radians(angle)
-            c = np.cos(theta)
-            s = np.sin(theta)
-            c2 = c*c
-            s2 = s*s
-            cs = c*s
-
-            # T_epsilon matrix: strain transformation global -> local
-            T = np.array([
-                [c2, s2, cs],
-                [s2, c2, -cs],
-                [-2*cs, 2*cs, c2-s2]
-            ])
-
-            # K = Q @ T
-            # s_local = Q @ eps_local = Q @ T @ eps_global
-            # s_local = K @ (eps0 + z * kappa) = (K @ eps0) + z * (K @ kappa)
-            K = Q @ T
-
-            A_term = K @ eps0 # (3, n_angles)
-            B_term = K @ kappa # (3, n_angles)
-            angle_cache[angle] = (A_term, B_term)
+        c2 = c*c
+        s2 = s*s
+        cs = c*s
 
         n_plies = len(laminate.stack)
-        n_angles = len(angles)
 
-        A_all = np.zeros((n_plies, 3, n_angles))
-        B_all = np.zeros((n_plies, 3, n_angles))
+        # Vectorized computation of T for all plies at once
+        T_all = np.empty((n_plies, 3, 3))
+        T_all[:, 0, 0] = c2
+        T_all[:, 0, 1] = s2
+        T_all[:, 0, 2] = cs
+        T_all[:, 1, 0] = s2
+        T_all[:, 1, 1] = c2
+        T_all[:, 1, 2] = -cs
+        T_all[:, 2, 0] = -2*cs
+        T_all[:, 2, 1] = 2*cs
+        T_all[:, 2, 2] = c2 - s2
 
-        for i, angle in enumerate(laminate.stack):
-            A, B = angle_cache[angle]
-            A_all[i] = A
-            B_all[i] = B
+        # Vectorized matmul: K = Q @ T
+        # Q is (3,3), T_all is (n_plies, 3, 3). Result K_all is (n_plies, 3, 3)
+        K_all = Q @ T_all
+
+        # Vectorized computation of A_all and B_all
+        # K_all: (n_plies, 3, 3), eps0/kappa: (3, n_angles)
+        # Result A_all/B_all: (n_plies, 3, n_angles)
+        A_all = K_all @ eps0
+        B_all = K_all @ kappa
 
         z_mids = (laminate.z_coords[:-1] + laminate.z_coords[1:]) / 2
         z_mids = z_mids[:, np.newaxis, np.newaxis]
