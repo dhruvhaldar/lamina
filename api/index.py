@@ -1,5 +1,4 @@
 from fastapi import FastAPI, HTTPException
-from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, field_validator, model_validator, ValidationError
 from fastapi.responses import JSONResponse
@@ -19,13 +18,16 @@ app.add_middleware(SecurityHeadersMiddleware)
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request, exc):
+    # Prevent reflecting unsanitized user input in the error response
+    # by excluding the 'input' and 'url' fields (Information Disclosure/Reflected DoS)
     errors = exc.errors()
-    # Sanitize input values that might be NaN/Inf to prevent JSON serialization errors
+
     for error in errors:
-        val = error.get('input')
-        if isinstance(val, float) and (math.isnan(val) or math.isinf(val)):
-            error['input'] = str(val)
-        # Ensure ctx values (like ValueError) are converted to string
+        # Manually remove 'input' and 'url' to avoid reflecting untrusted data
+        error.pop('input', None)
+        error.pop('url', None)
+
+        # Ensure ctx values (like ValueError) are converted to string to prevent JSON errors
         if 'ctx' in error and 'error' in error['ctx']:
             error['ctx']['error'] = str(error['ctx']['error'])
 
