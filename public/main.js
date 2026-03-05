@@ -20,12 +20,12 @@ function setLoading(btn, isLoading) {
     if (isLoading) {
         btn.setAttribute('disabled', 'true');
         btn.setAttribute('aria-busy', 'true');
-        btn.dataset.originalText = btn.innerText;
+        btn.dataset.originalHtml = btn.innerHTML;
         btn.innerHTML = '<span class="spinner"></span> Processing...';
     } else {
         btn.removeAttribute('disabled');
         btn.setAttribute('aria-busy', 'false');
-        btn.innerText = btn.dataset.originalText;
+        btn.innerHTML = btn.dataset.originalHtml;
     }
 }
 
