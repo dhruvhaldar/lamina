@@ -47,10 +47,19 @@ function initStackPreview() {
 
     const label = stackInput.parentElement;
     const preview = document.createElement('div');
+    preview.id = 'stack-preview';
     preview.className = 'input-preview';
     preview.style.float = 'none'; // Override float for stack preview
     preview.style.marginTop = '8px';
+    preview.setAttribute('aria-live', 'polite');
+    preview.setAttribute('aria-atomic', 'true');
     label.appendChild(preview);
+
+    // Link preview to input for screen readers
+    const currentDescribedBy = stackInput.getAttribute('aria-describedby') || '';
+    if (!currentDescribedBy.includes('stack-preview')) {
+        stackInput.setAttribute('aria-describedby', `${currentDescribedBy} stack-preview`.trim());
+    }
 
     const update = () => {
         const stackStr = stackInput.value;

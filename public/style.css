@@ -41,6 +41,7 @@ input, select {
     padding: 8px;
     border: 1px solid #ccc;
     border-radius: 4px;
+    transition: border-color 0.2s, box-shadow 0.2s;
 }
 button {
     background: #2579b0;
@@ -51,6 +52,7 @@ button {
     cursor: pointer;
     font-size: 16px;
     margin-right: 10px;
+    transition: background-color 0.2s, transform 0.1s;
 }
 button:hover {
     background: #1f6595;
