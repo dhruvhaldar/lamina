@@ -25,13 +25,16 @@ class BucklingAnalysis:
         min_N = float('inf')
         best_m = 1
 
+        # Optimization: Precompute loop-invariant constants
+        pi_b_sq = np.pi**2 / b**2
+        term2_b2_pi2 = pi_b_sq * 2 * (D12 + 2 * D66)
+        factor1 = D11 * (b / a)**2 * pi_b_sq
+        factor3 = D22 * (a / b)**2 * pi_b_sq
+
         # Check modes m = 1 to m_max
         for m in range(1, m_max + 1):
-            term1 = D11 * (m * b / a)**2
-            term2 = 2 * (D12 + 2 * D66)
-            term3 = D22 * (a / (m * b))**2
-
-            N = (np.pi**2 / b**2) * (term1 + term2 + term3)
+            m2 = m * m
+            N = factor1 * m2 + term2_b2_pi2 + factor3 / m2
 
             if N < min_N:
                 min_N = N
