@@ -8,10 +8,17 @@ function drawPolar(data) {
     const margin = 40;
     const radius = Math.min(width, height) / 2 - margin;
 
-    const svg = d3.select("#polar-plot")
+    const svgContainer = d3.select("#polar-plot")
         .append("svg")
         .attr("width", width)
         .attr("height", height)
+        .attr("role", "img")
+        .attr("aria-label", "Stiffness Polar Plot: A radar chart visualizing the directional Young's Modulus (Ex) of the laminate.");
+
+    svgContainer.append("title")
+        .text("Stiffness Polar Plot: A radar chart visualizing the directional Young's Modulus (Ex) of the laminate.");
+
+    const svg = svgContainer
         .append("g")
         .attr("transform", `translate(${width/2},${height/2})`);
 

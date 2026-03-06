@@ -87,7 +87,7 @@ function formatEngineeringConstants(props) {
     return `
         <div class="result-container">
             <button class="copy-btn" aria-label="Copy Engineering Constants">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false">
                     <path d="M7.5 3.375c0-1.036.84-1.875 1.875-1.875h.375a3.75 3.75 0 013.75 3.75v1.875C13.5 8.161 14.34 9 15.375 9h1.875A3.75 3.75 0 0121 12.75v3.375C21 17.16 20.16 18 19.125 18h-9.75A1.875 1.875 0 017.5 16.125V3.375z" />
                     <path d="M15 5.25a5.23 5.23 0 00-1.279-3.434 9.768 9.768 0 016.963 6.963A5.23 5.23 0 0017.25 5.25h-2.25z" />
                     <path d="M4.5 4.5a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 004.5 22.5h11.25a2.25 2.25 0 002.25-2.25V19.5h-9.375A3.375 3.375 0 015.25 16.125V4.5h-.75z" />
@@ -126,7 +126,7 @@ async function copyToClipboard(btn) {
 
         // Visual feedback
         btn.innerHTML = `
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" focusable="false">
                 <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
             </svg>
             Copied!
@@ -169,7 +169,7 @@ async function calculate(btn) {
         abdOut.innerHTML = `
             <div class="result-container">
                 <button class="copy-btn" aria-label="Copy ABD Matrix">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false">
                         <path d="M7.5 3.375c0-1.036.84-1.875 1.875-1.875h.375a3.75 3.75 0 013.75 3.75v1.875C13.5 8.161 14.34 9 15.375 9h1.875A3.75 3.75 0 0121 12.75v3.375C21 17.16 20.16 18 19.125 18h-9.75A1.875 1.875 0 017.5 16.125V3.375z" />
                         <path d="M15 5.25a5.23 5.23 0 00-1.279-3.434 9.768 9.768 0 016.963 6.963A5.23 5.23 0 0017.25 5.25h-2.25z" />
                         <path d="M4.5 4.5a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 004.5 22.5h11.25a2.25 2.25 0 002.25-2.25V19.5h-9.375A3.375 3.375 0 015.25 16.125V4.5h-.75z" />
