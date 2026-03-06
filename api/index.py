@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Path
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, field_validator, model_validator, ValidationError
 from fastapi.responses import JSONResponse
@@ -194,7 +194,7 @@ ALLOWED_EXTENSIONS = {'.html', '.css', '.js', '.json', '.png', '.jpg', '.jpeg', 
 
 
 @app.get("/{filename}")
-def read_file(filename: str):
+def read_file(filename: str = Path(..., max_length=255)):
     base_dir = os.path.realpath("public")
     requested_path = os.path.realpath(os.path.join(base_dir, filename))
 
