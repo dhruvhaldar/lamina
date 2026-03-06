@@ -10,7 +10,12 @@ function drawEnvelope(data) {
     const svg = d3.select("#envelope-plot")
         .append("svg")
         .attr("width", width)
-        .attr("height", height);
+        .attr("height", height)
+        .attr("role", "img")
+        .attr("aria-label", "Tsai-Wu Failure Envelope: A 2D plot showing the safe operating limits for biaxial stress (Sigma X vs Sigma Y).");
+
+    svg.append("title")
+        .text("Tsai-Wu Failure Envelope: A 2D plot showing the safe operating limits for biaxial stress (Sigma X vs Sigma Y).");
 
     const g = svg.append("g")
         .attr("transform", `translate(${margin},${margin})`);

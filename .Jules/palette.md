@@ -55,3 +55,7 @@
 ## 2026-03-02 - Accessible Color Contrast in Primary/Success States
 **Learning:** Default primary action blues (e.g., `#3498db`) and success greens (e.g., `#27ae60`) often fail WCAG AA 4.5:1 contrast requirements when used as text colors on light backgrounds, making error/success states or badges illegible.
 **Action:** Always verify contrast ratios for dynamic textual feedback and explicitly darken brand or standard colors (e.g., using `#2579b0` for primary, `#1e8449` for success) to ensure readability for all users.
+
+## 2026-03-06 - SVG Accessibility and Screen Readers
+**Learning:** Complex D3 visualizations generated as `<svg>` elements are opaque to screen readers by default. Conversely, decorative inline SVGs inside buttons with `aria-label`s cause redundant announcements and focus issues in older browsers.
+**Action:** Always add `role="img"`, `aria-label`, and embedded `<title>` tags to informative SVG charts. For decorative SVGs inside actionable elements, always apply `aria-hidden="true"` and `focusable="false"`.
