@@ -7,7 +7,7 @@ def verify_ply_badges():
         page = browser.new_page()
 
         # Go to local app
-        page.goto("http://localhost:8000")
+        page.goto("http://localhost:8000/public/")
 
         # Wait for page load
         page.wait_for_selector("h1")
