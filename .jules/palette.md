@@ -5,3 +5,7 @@
 ## 2026-03-05 - Making Dynamic Inline Validation Accessible
 **Learning:** Visual-only inline validation errors (e.g., turning text red and updating a sibling `div` with an error message) are invisible to screen readers unless explicitly linked.
 **Action:** When creating dynamic error message containers, add `aria-live="polite"` and dynamically link the container's ID to the input's `aria-describedby` attribute to ensure AT users are informed of validation failures as they type.
+
+## 2026-03-07 - Empty State Visual Polish
+**Learning:** Text-only empty states can appear unpolished to users and fail to convey the type of content expected in that area.
+**Action:** Always include a decorative SVG icon (with `aria-hidden="true"` and `focusable="false"`) alongside helper text in empty states to provide visual structure and clarity.
