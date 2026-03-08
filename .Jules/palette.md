@@ -59,3 +59,7 @@
 ## 2026-03-06 - SVG Accessibility and Screen Readers
 **Learning:** Complex D3 visualizations generated as `<svg>` elements are opaque to screen readers by default. Conversely, decorative inline SVGs inside buttons with `aria-label`s cause redundant announcements and focus issues in older browsers.
 **Action:** Always add `role="img"`, `aria-label`, and embedded `<title>` tags to informative SVG charts. For decorative SVGs inside actionable elements, always apply `aria-hidden="true"` and `focusable="false"`.
+
+## 2026-03-07 - Real-time Accessible Inline Validation
+**Learning:** Providing real-time visual formatting alongside numeric inputs using `aria-hidden` makes it opaque to screen reader users, and failing to provide immediate inline validation for incorrect inputs (like negative values or empty stacks) before submission frustrates users.
+**Action:** Replace `aria-hidden` with `aria-live="polite"` and `aria-atomic="true"`, link the preview element to the input using `aria-describedby`, and provide immediate real-time validation (including changing text color and setting `aria-invalid="true"`) for improved accessibility and user experience.
