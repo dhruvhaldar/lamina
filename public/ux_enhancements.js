@@ -70,8 +70,9 @@ function initStackPreview() {
         const rawPlies = stackStr.split(/[\s,]+/).filter(s => s !== '');
 
         if (rawPlies.length === 0) {
-            preview.innerHTML = '';
-            stackInput.removeAttribute('aria-invalid');
+            preview.textContent = 'Stack cannot be empty';
+            preview.style.color = '#c0392b';
+            stackInput.setAttribute('aria-invalid', 'true');
             return;
         }
 
@@ -120,25 +121,50 @@ function initInputPreviews() {
     const inputs = document.querySelectorAll('input[type="number"]');
 
     inputs.forEach(input => {
-        // Skip Poisson's ratio (v12) as it's dimensionless
-        if (input.id === 'v12') return;
-
-        const unit = input.id === 'thickness' ? 'm' : 'Pa';
+        const unit = input.id === 'thickness' ? 'm' : (input.id === 'v12' ? '' : 'Pa');
         const label = input.parentElement;
 
         // Create preview element
         const preview = document.createElement('span');
+        preview.id = input.id + '-preview';
         preview.className = 'input-preview';
-        preview.textContent = formatMetric(input.value, unit);
-        preview.setAttribute('aria-hidden', 'true'); // Visual helper only
+        preview.setAttribute('aria-live', 'polite');
+        preview.setAttribute('aria-atomic', 'true');
+
+        // Link preview to input for screen readers
+        const currentDescribedBy = input.getAttribute('aria-describedby') || '';
+        if (!currentDescribedBy.includes(preview.id)) {
+            input.setAttribute('aria-describedby', `${currentDescribedBy} ${preview.id}`.trim());
+        }
+
+        const update = () => {
+            const val = parseFloat(input.value);
+            if (isNaN(val)) {
+                preview.textContent = 'Invalid number';
+                preview.style.color = '#c0392b';
+                input.setAttribute('aria-invalid', 'true');
+            } else if (val <= 0 && input.id !== 'v12') {
+                preview.textContent = 'Must be > 0';
+                preview.style.color = '#c0392b';
+                input.setAttribute('aria-invalid', 'true');
+            } else {
+                if (input.id === 'v12') {
+                    preview.textContent = input.value;
+                } else {
+                    preview.textContent = formatMetric(input.value, unit);
+                }
+                preview.style.color = '';
+                input.removeAttribute('aria-invalid');
+            }
+        };
+
+        update();
 
         // Insert before input
         label.insertBefore(preview, input);
 
         // Update on input
-        input.addEventListener('input', (e) => {
-            preview.textContent = formatMetric(e.target.value, unit);
-        });
+        input.addEventListener('input', update);
     });
 }
 
