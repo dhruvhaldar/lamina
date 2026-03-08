@@ -140,16 +140,24 @@ class Laminate:
         self.D = (1/3) * (Q_bars.reshape(9, -1) @ h3).reshape(3, 3)
 
         # ABD Matrix
-        self.ABD = np.vstack([
-            np.hstack([self.A, self.B]),
-            np.hstack([self.B, self.D])
-        ])
+        self.ABD = np.empty((6, 6))
+        self.ABD[:3, :3] = self.A
+        self.ABD[:3, 3:] = self.B
+        self.ABD[3:, :3] = self.B
+        self.ABD[3:, 3:] = self.D
 
-        # Compliance Matrix (inverse of ABD)
-        try:
-            self.abd = np.linalg.inv(self.ABD)
-        except np.linalg.LinAlgError:
-            self.abd = np.zeros_like(self.ABD)
+        # Invalidate cached compliance matrix
+        self._abd = None
+
+    @property
+    def abd(self):
+        """Lazy evaluation of the compliance matrix (inverse of ABD)."""
+        if getattr(self, '_abd', None) is None:
+            try:
+                self._abd = np.linalg.inv(self.ABD)
+            except np.linalg.LinAlgError:
+                self._abd = np.zeros_like(self.ABD)
+        return self._abd
 
     def _calculate_z_coords(self):
         n_plies = len(self.stack)
