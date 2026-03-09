@@ -10,9 +10,11 @@ import math
 from lamina.materials import Material
 from lamina.clt import Laminate
 from lamina.failure import FailureCriterion
-from api.middleware import SecurityHeadersMiddleware, RateLimitMiddleware
+from api.middleware import SecurityHeadersMiddleware, RateLimitMiddleware, PayloadSizeLimitMiddleware
 
 app = FastAPI()
+# Add global 1MB payload size limit middleware
+app.add_middleware(PayloadSizeLimitMiddleware, limit=1048576)
 app.add_middleware(RateLimitMiddleware, limit=100, window=60)
 app.add_middleware(SecurityHeadersMiddleware)
 
