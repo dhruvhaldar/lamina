@@ -127,17 +127,23 @@ class Laminate:
         zk = self.z_coords[1:]
         zk_1 = self.z_coords[:-1]
 
+        # Optimization: algebraic simplifications are faster than array exponentiation
         h = zk - zk_1
-        h2 = zk**2 - zk_1**2
-        h3 = zk**3 - zk_1**3
+        sum_z = zk + zk_1
+        h2 = h * sum_z
+        h3 = h * (zk*zk + zk*zk_1 + zk_1*zk_1)
 
         # 3. Sum over plies (axis 2)
         # Optimization: Use dot product for A, B, and D matrices.
         # This replaces broadcasting which creates large temporary arrays (3, 3, N)
         # and leverages optimized BLAS routines (reshape(9, N) @ (N,)).
-        self.A = (Q_bars.reshape(9, -1) @ h).reshape(3, 3)
-        self.B = 0.5 * (Q_bars.reshape(9, -1) @ h2).reshape(3, 3)
-        self.D = (1/3) * (Q_bars.reshape(9, -1) @ h3).reshape(3, 3)
+
+        # Reshaping once is faster than 3 times
+        Q_bars_flat = Q_bars.reshape(9, -1)
+
+        self.A = (Q_bars_flat @ h).reshape(3, 3)
+        self.B = 0.5 * (Q_bars_flat @ h2).reshape(3, 3)
+        self.D = (1/3) * (Q_bars_flat @ h3).reshape(3, 3)
 
         # ABD Matrix
         self.ABD = np.empty((6, 6))
@@ -162,7 +168,10 @@ class Laminate:
     def _calculate_z_coords(self):
         n_plies = len(self.stack)
         h = self.total_thickness
-        z = np.linspace(-h/2, h/2, n_plies + 1)
+        # Optimization: np.arange and simple math is significantly faster than np.linspace for small arrays
+        z = np.arange(n_plies + 1, dtype=np.float64)
+        z *= self.ply_thickness
+        z -= h/2
         return z
 
     def _get_Q_bar(self, angle_deg):
@@ -184,30 +193,24 @@ class Laminate:
         U1, U2, U3, U4, U5 = self.material.invariants
 
         # Calculate double angles from single angles
-        # cos(2t) = c^2 - s^2
-        # sin(2t) = 2*c*s
-
-        c2 = c*c
-        s2 = s*s
-
-        cos2 = c2 - s2
+        # Optimization: Pre-compute repetitive array multiplications to reduce allocation overhead
+        cos2 = c*c - s*s
         sin2 = 2 * c * s
 
-        # cos(4t) = cos(2*2t) = cos2^2 - sin2^2
-        # sin(4t) = 2*cos2*sin2
-
-        cos2_sq = cos2*cos2
-        sin2_sq = sin2*sin2
-
-        cos4 = cos2_sq - sin2_sq
+        cos4 = cos2*cos2 - sin2*sin2
         sin4 = 2 * cos2 * sin2
 
-        Q_bar_11 = U1 + U2*cos2 + U3*cos4
-        Q_bar_12 = U4 - U3*cos4
-        Q_bar_22 = U1 - U2*cos2 + U3*cos4
-        Q_bar_16 = 0.5*U2*sin2 + U3*sin4
-        Q_bar_26 = 0.5*U2*sin2 - U3*sin4
-        Q_bar_66 = U5 - U3*cos4
+        U2_cos2 = U2 * cos2
+        U3_cos4 = U3 * cos4
+        half_U2_sin2 = 0.5 * U2 * sin2
+        U3_sin4 = U3 * sin4
+
+        Q_bar_11 = U1 + U2_cos2 + U3_cos4
+        Q_bar_12 = U4 - U3_cos4
+        Q_bar_22 = U1 - U2_cos2 + U3_cos4
+        Q_bar_16 = half_U2_sin2 + U3_sin4
+        Q_bar_26 = half_U2_sin2 - U3_sin4
+        Q_bar_66 = U5 - U3_cos4
 
         return np.array([
             [Q_bar_11, Q_bar_12, Q_bar_16],
