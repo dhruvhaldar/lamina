@@ -1,5 +1,5 @@
 from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.types import ASGIApp
+from starlette.types import ASGIApp, Scope, Receive, Send, Message
 from fastapi import Request, Response
 import time
 
@@ -64,3 +64,77 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 
         self.clients[ip] = (count, start_time)
         return await call_next(request)
+
+class PayloadSizeLimitMiddleware:
+    """
+    Middleware to limit payload size to prevent DoS via memory exhaustion.
+    Implemented as a pure ASGI middleware to correctly intercept streaming bodies.
+    """
+    def __init__(self, app: ASGIApp, limit: int = 1048576): # Default 1MB
+        self.app = app
+        self.limit = limit
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] != "http":
+            return await self.app(scope, receive, send)
+
+        if scope["method"] in ("POST", "PUT", "PATCH"):
+            # Check Content-Length header first for early rejection
+            headers = dict(scope.get("headers", []))
+            content_length = headers.get(b"content-length")
+            if content_length:
+                try:
+                    if int(content_length) > self.limit:
+                        await self.send_413(send)
+                        return
+                except ValueError:
+                    await self.send_400(send, "Invalid Content-Length")
+                    return
+
+            total_size = 0
+
+            async def wrapped_receive() -> Message:
+                nonlocal total_size
+                message = await receive()
+                if message["type"] == "http.request":
+                    body = message.get("body", b"")
+                    total_size += len(body)
+                    if total_size > self.limit:
+                        raise RuntimeError("Payload Too Large")
+                return message
+
+            try:
+                await self.app(scope, wrapped_receive, send)
+            except RuntimeError as exc:
+                if str(exc) == "Payload Too Large":
+                    # Attempt to send 413 response if app crashes due to large payload
+                    try:
+                        await self.send_413(send)
+                    except Exception:
+                        pass
+                    return
+                raise
+        else:
+            await self.app(scope, receive, send)
+
+    async def send_413(self, send: Send):
+        await send({
+            "type": "http.response.start",
+            "status": 413,
+            "headers": [(b"content-type", b"text/plain")],
+        })
+        await send({
+            "type": "http.response.body",
+            "body": b"Payload Too Large",
+        })
+
+    async def send_400(self, send: Send, message: str):
+        await send({
+            "type": "http.response.start",
+            "status": 400,
+            "headers": [(b"content-type", b"text/plain")],
+        })
+        await send({
+            "type": "http.response.body",
+            "body": message.encode(),
+        })

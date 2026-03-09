@@ -70,3 +70,38 @@ def test_security_headers_calculate():
     # Ensure unsafe-inline is NOT in script-src
     script_src = [p for p in csp.split(';') if 'script-src' in p][0]
     assert "'unsafe-inline'" not in script_src
+
+def test_payload_size_limit():
+    """
+    Test that payloads larger than 1MB are rejected to prevent memory exhaustion DoS.
+    """
+    large_payload = b"A" * (1024 * 1024 + 10)  # Just over 1MB
+
+    # POST request
+    response = client.post("/api/calculate", content=large_payload)
+    assert response.status_code == 413
+    assert response.text == "Payload Too Large"
+
+    # PUT request (if applicable to the app, middleware handles it globally)
+    response = client.put("/api/calculate", content=large_payload)
+    assert response.status_code == 413
+
+    # PATCH request
+    response = client.patch("/api/calculate", content=large_payload)
+    assert response.status_code == 413
+
+def test_invalid_content_length_header():
+    """
+    Test that invalid Content-Length headers are rejected.
+    """
+    response = client.post("/api/calculate", content=b"A"*10, headers={"Content-Length": "invalid"})
+    assert response.status_code == 400
+    assert response.text == "Invalid Content-Length"
+
+def test_forged_content_length_header():
+    """
+    Test that forged Content-Length headers over limit are rejected immediately.
+    """
+    response = client.post("/api/calculate", content=b"A"*10, headers={"Content-Length": "2000000"})
+    assert response.status_code == 413
+    assert response.text == "Payload Too Large"
