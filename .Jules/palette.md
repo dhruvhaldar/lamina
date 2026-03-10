@@ -63,3 +63,7 @@
 ## 2026-03-07 - Real-time Accessible Inline Validation
 **Learning:** Providing real-time visual formatting alongside numeric inputs using `aria-hidden` makes it opaque to screen reader users, and failing to provide immediate inline validation for incorrect inputs (like negative values or empty stacks) before submission frustrates users.
 **Action:** Replace `aria-hidden` with `aria-live="polite"` and `aria-atomic="true"`, link the preview element to the input using `aria-describedby`, and provide immediate real-time validation (including changing text color and setting `aria-invalid="true"`) for improved accessibility and user experience.
+
+## 2025-03-10 - Input Handling for Lists
+**Learning:** Users often copy-paste list data (like stacking sequences) in various formats (space-separated vs. comma-separated). Strict comma-only parsing leads to silent data dropping or errors.
+**Action:** Use regex-based splitting (`/[\s,]+/`) when parsing text inputs representing numerical lists to robustly handle spaces, commas, or combinations of both, ensuring data integrity regardless of input format.
