@@ -36,7 +36,7 @@ async function getLaminateData() {
     const v12 = parseFloat(document.getElementById('v12').value);
 
     const stackStr = document.getElementById('stack').value;
-    const stack = stackStr.split(',').map(s => parseFloat(s.trim()));
+    const stack = stackStr.split(/[\s,]+/).filter(s => s !== '').map(s => parseFloat(s.trim()));
     const symmetry = document.getElementById('symmetry').checked;
     const thickness = parseFloat(document.getElementById('thickness').value);
 
