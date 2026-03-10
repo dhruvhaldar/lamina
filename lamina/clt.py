@@ -10,42 +10,51 @@ def _get_transformation_matrices(angle_deg):
     c = np.cos(theta)
     s = np.sin(theta)
 
+    c2 = c * c
+    s2 = s * s
+    cs = c * s
+    c2_s2 = c2 - s2
+
     if np.ndim(theta) == 0:
         # T_sigma (stress transformation)
         T_sigma = np.array([
-            [c**2, s**2, 2*c*s],
-            [s**2, c**2, -2*c*s],
-            [-c*s, c*s, c**2-s**2]
+            [c2, s2, 2*cs],
+            [s2, c2, -2*cs],
+            [-cs, cs, c2_s2]
         ])
 
         # T_epsilon_inv (strain transformation inverse)
         T_epsilon_inv = np.array([
-            [c**2, s**2, -c*s],
-            [s**2, c**2, c*s],
-            [2*c*s, -2*c*s, c**2-s**2]
+            [c2, s2, -cs],
+            [s2, c2, cs],
+            [2*cs, -2*cs, c2_s2]
         ])
     else:
         # Vectorized case: theta is (N,)
-        c2 = c**2
-        s2 = s**2
-        cs = c*s
+        # Optimization: Pre-allocate target arrays to avoid intermediate (3, 3, N)
+        # array construction and .transpose() overhead
+        n = theta.size
+        T_sigma = np.empty((n, 3, 3))
+        T_sigma[:, 0, 0] = c2
+        T_sigma[:, 0, 1] = s2
+        T_sigma[:, 0, 2] = 2*cs
+        T_sigma[:, 1, 0] = s2
+        T_sigma[:, 1, 1] = c2
+        T_sigma[:, 1, 2] = -2*cs
+        T_sigma[:, 2, 0] = -cs
+        T_sigma[:, 2, 1] = cs
+        T_sigma[:, 2, 2] = c2_s2
 
-        # Construct T_sigma as (N, 3, 3)
-        # We construct (3, 3, N) first then transpose
-        T_sigma_T = np.array([
-            [c2, s2, 2*cs],
-            [s2, c2, -2*cs],
-            [-cs, cs, c2-s2]
-        ])
-        T_sigma = T_sigma_T.transpose(2, 0, 1)
-
-        # Construct T_epsilon_inv as (N, 3, 3)
-        T_epsilon_inv_T = np.array([
-            [c2, s2, -cs],
-            [s2, c2, cs],
-            [2*cs, -2*cs, c2-s2]
-        ])
-        T_epsilon_inv = T_epsilon_inv_T.transpose(2, 0, 1)
+        T_epsilon_inv = np.empty((n, 3, 3))
+        T_epsilon_inv[:, 0, 0] = c2
+        T_epsilon_inv[:, 0, 1] = s2
+        T_epsilon_inv[:, 0, 2] = -cs
+        T_epsilon_inv[:, 1, 0] = s2
+        T_epsilon_inv[:, 1, 1] = c2
+        T_epsilon_inv[:, 1, 2] = cs
+        T_epsilon_inv[:, 2, 0] = 2*cs
+        T_epsilon_inv[:, 2, 1] = -2*cs
+        T_epsilon_inv[:, 2, 2] = c2_s2
 
     return T_sigma, T_epsilon_inv
 
@@ -121,7 +130,8 @@ class Laminate:
         self.s = np.sin(self.rads)
 
         # Calculate Q_bar using precomputed trig values for performance
-        Q_bars = self._get_Q_bar_from_trig(self.c, self.s) # Returns (3, 3, n_plies)
+        # Optimization: returns (9, n_plies) array directly
+        Q_bars_flat = self._get_Q_bar_from_trig(self.c, self.s)
 
         # 2. Calculate thickness terms
         zk = self.z_coords[1:]
@@ -137,9 +147,6 @@ class Laminate:
         # Optimization: Use dot product for A, B, and D matrices.
         # This replaces broadcasting which creates large temporary arrays (3, 3, N)
         # and leverages optimized BLAS routines (reshape(9, N) @ (N,)).
-
-        # Reshaping once is faster than 3 times
-        Q_bars_flat = Q_bars.reshape(9, -1)
 
         self.A = (Q_bars_flat @ h).reshape(3, 3)
         self.B = 0.5 * (Q_bars_flat @ h2).reshape(3, 3)
@@ -182,7 +189,10 @@ class Laminate:
         theta = np.radians(angle_deg)
         c = np.cos(theta)
         s = np.sin(theta)
-        return self._get_Q_bar_from_trig(c, s)
+        q_bar_flat = self._get_Q_bar_from_trig(c, s)
+        if np.ndim(angle_deg) == 0:
+            return q_bar_flat.reshape(3, 3)
+        return q_bar_flat.reshape(3, 3, -1)
 
     def _get_Q_bar_from_trig(self, c, s):
         """
@@ -212,11 +222,21 @@ class Laminate:
         Q_bar_26 = half_U2_sin2 - U3_sin4
         Q_bar_66 = U5 - U3_cos4
 
-        return np.array([
-            [Q_bar_11, Q_bar_12, Q_bar_16],
-            [Q_bar_12, Q_bar_22, Q_bar_26],
-            [Q_bar_16, Q_bar_26, Q_bar_66]
-        ])
+        # Optimization: Directly populate and return flat array (9, N) to avoid
+        # 3x3xN array construction and subsequent .reshape(9, -1) overhead
+        n = c.size if np.ndim(c) > 0 else 1
+        res = np.empty((9, n))
+        res[0] = Q_bar_11
+        res[1] = Q_bar_12
+        res[2] = Q_bar_16
+        res[3] = Q_bar_12
+        res[4] = Q_bar_22
+        res[5] = Q_bar_26
+        res[6] = Q_bar_16
+        res[7] = Q_bar_26
+        res[8] = Q_bar_66
+
+        return res
 
     def properties(self):
         """Returns equivalent engineering constants."""
@@ -266,20 +286,16 @@ class Laminate:
         a11 = a_prime[:, 1, 1]
         a22 = a_prime[:, 2, 2]
 
-        # Initialize arrays
+        # Optimization: Use np.divide instead of manual masking to reduce array loops and boolean array overhead
+        h_inv = 1.0 / h
+
         Ex = np.zeros_like(a00)
         Ey = np.zeros_like(a11)
         Gxy = np.zeros_like(a22)
 
-        # Vectorized division with zero check
-        mask00 = a00 != 0
-        Ex[mask00] = 1 / (h * a00[mask00])
-
-        mask11 = a11 != 0
-        Ey[mask11] = 1 / (h * a11[mask11])
-
-        mask22 = a22 != 0
-        Gxy[mask22] = 1 / (h * a22[mask22])
+        np.divide(h_inv, a00, out=Ex, where=a00!=0)
+        np.divide(h_inv, a11, out=Ey, where=a11!=0)
+        np.divide(h_inv, a22, out=Gxy, where=a22!=0)
 
         # Optimization: Converting arrays to lists and zipping them in a list comprehension
         # is significantly faster than looping over the arrays and calling float() on each element.
