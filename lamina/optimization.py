@@ -29,7 +29,7 @@ def calculate_safety_factor(laminate, load, limits):
     F2 = 1/Yt - 1/Yc
     F11 = 1/(Xt * Xc)
     F22 = 1/(Yt * Yc)
-    F66 = 1/(S**2)
+    F66 = 1/(S*S)
     F12 = -0.5 * np.sqrt(F11 * F22)
 
     # Vectorized operations
@@ -43,23 +43,18 @@ def calculate_safety_factor(laminate, load, limits):
         c = np.cos(theta)
         s = np.sin(theta)
 
-    c2 = c**2
-    s2 = s**2
-    cs = c*s
+    c2 = c * c
+    s2 = s * s
+    cs = c * s
 
     # z coordinates (midpoints)
     # laminate.z_coords is size N+1
     z = (laminate.z_coords[:-1] + laminate.z_coords[1:]) / 2
 
-    # eps_global: (3, N)
-    # eps0: (3,) -> (3, 1)
-    # kap: (3,) -> (3, 1)
-    # z: (N,) -> (1, N)
-    eps_global = eps0[:, np.newaxis] + kap[:, np.newaxis] * z[np.newaxis, :]
-
-    ex = eps_global[0]
-    ey = eps_global[1]
-    gxy = eps_global[2]
+    # Optimization: direct component addition instead of allocating a large 3xN broadcast array
+    ex = eps0[0] + kap[0] * z
+    ey = eps0[1] + kap[1] * z
+    gxy = eps0[2] + kap[2] * z
 
     e1 = c2 * ex + s2 * ey + cs * gxy
     e2 = s2 * ex + c2 * ey - cs * gxy
@@ -72,55 +67,29 @@ def calculate_safety_factor(laminate, load, limits):
     t12 = Q[2,2]*g12
 
     # Tsai-Wu: A f^2 + B f - 1 = 0
-    A = F11*s1**2 + F22*s2**2 + F66*t12**2 + 2*F12*s1*s2
+    A = F11*(s1*s1) + F22*(s2*s2) + F66*(t12*t12) + 2*F12*s1*s2
     B = F1*s1 + F2*s2
 
-    # Initialize f with infinity
-    f_all = np.full_like(A, np.inf)
+    delta = B * B + 4 * A
 
-    # Handle A near 0 (linear case)
-    mask_linear = np.abs(A) < 1e-10
+    with np.errstate(divide='ignore', invalid='ignore'):
+        sqrt_delta = np.sqrt(delta)
 
-    # Linear: B*f - 1 = 0 => f = 1/B
-    # Only if B > 0
-    mask_lin_pos = mask_linear & (B > 0)
-    f_all[mask_lin_pos] = 1 / B[mask_lin_pos]
+        # Quadratic solutions
+        two_A = 2 * A
+        f1_quad = (-B + sqrt_delta) / two_A
+        f2_quad = (-B - sqrt_delta) / two_A
 
-    # Quadratic
-    mask_quad = ~mask_linear
+        # Linear solutions
+        f_lin = 1.0 / B
 
-    if np.any(mask_quad):
-        A_q = A[mask_quad]
-        B_q = B[mask_quad]
-        delta = B_q**2 + 4*A_q
+        # Handle solutions efficiently using nested np.where to avoid generating multiple boolean masks and arrays
+        f_quad = np.where((delta >= 0) & (f1_quad > 0), f1_quad,
+                            np.where((delta >= 0) & (f2_quad > 0), f2_quad, np.inf))
 
-        # Check for valid solutions (delta >= 0)
-        mask_delta = delta >= 0
-
-        if np.any(mask_delta):
-            sqrt_delta = np.sqrt(delta[mask_delta])
-            A_valid = A_q[mask_delta]
-            B_valid = B_q[mask_delta]
-
-            f1 = (-B_valid + sqrt_delta) / (2*A_valid)
-            f2 = (-B_valid - sqrt_delta) / (2*A_valid)
-
-            f_sol = np.full_like(f1, np.inf)
-
-            # Prefer f1 if > 0
-            mask_f1 = f1 > 0
-            f_sol[mask_f1] = f1[mask_f1]
-
-            # Else try f2
-            mask_f2 = (~mask_f1) & (f2 > 0)
-            f_sol[mask_f2] = f2[mask_f2]
-
-            # Map back to f_all
-            # Create array for quadratic subset
-            f_quad_subset = np.full(mask_quad.sum(), np.inf)
-            f_quad_subset[mask_delta] = f_sol
-
-            f_all[mask_quad] = f_quad_subset
+        f_all = np.where(np.abs(A) < 1e-10,
+                            np.where(B > 0, f_lin, np.inf),
+                            f_quad)
 
     return np.min(f_all)
 
