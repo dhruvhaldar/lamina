@@ -67,3 +67,7 @@
 ## 2025-03-10 - Input Handling for Lists
 **Learning:** Users often copy-paste list data (like stacking sequences) in various formats (space-separated vs. comma-separated). Strict comma-only parsing leads to silent data dropping or errors.
 **Action:** Use regex-based splitting (`/[\s,]+/`) when parsing text inputs representing numerical lists to robustly handle spaces, commas, or combinations of both, ensuring data integrity regardless of input format.
+
+## 2026-03-11 - Preserving CSS Grid Layouts During Label Upgrades
+**Learning:** When upgrading implicitly wrapped labels (e.g., `<label>Text <input></label>`) to explicitly associated ones (using `for` and `id`), moving the `<input>` element outside of the `<label>` wrapper can break existing CSS Grid or Flexbox layouts that treat the original `<label>` as a single unified layout container.
+**Action:** When adding `for` attributes to explicitly link inputs for screen readers, carefully maintain the original nested HTML structure (e.g., `<label for="id">Text <input id="id"></label>`) unless CSS rules are also being refactored to accommodate separated elements.
