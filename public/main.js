@@ -97,8 +97,8 @@ function formatEngineeringConstants(props) {
             <div class="clipboard-data">${copyText}</div>
             <div class="input-grid results-grid">
                 ${items.map(item => `
-                    <div class="result-item" title="${item.title}">
-                        <strong>${item.label}:</strong> ${item.convert(item.value)}
+                    <div class="result-item">
+                        <strong><abbr title="${item.title}">${item.label}</abbr>:</strong> ${item.convert(item.value)}
                     </div>
                 `).join('')}
             </div>
