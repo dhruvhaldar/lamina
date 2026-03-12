@@ -176,6 +176,7 @@ function initKeyboardShortcuts() {
     // Add visual hint to the button
     const btn = document.getElementById('btn-calculate');
     if (btn) {
+        btn.setAttribute('aria-keyshortcuts', isMac ? 'Meta+Enter' : 'Control+Enter');
         const hint = document.createElement('span');
         hint.className = 'shortcut-hint';
         hint.textContent = shortcutText;

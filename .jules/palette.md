@@ -17,3 +17,11 @@
 ## 2026-03-08 - Redundant ARIA Labels on Explicitly Labeled Fields
 **Learning:** Applying an `aria-label` to an input element that already has an explicitly associated `<label for="...">` causes screen readers to announce the label twice, creating auditory clutter.
 **Action:** Avoid redundant `aria-label` attributes on form controls if an accessible `<label>` is already properly linked.
+
+## 2026-03-20 - Semantic Abbreviations for Discoverability
+**Learning:** Using `title` attributes directly on `<label>` elements or generic `<div>`s for engineering terms (like `E1`) lacks visual affordance for sighted users (unless they accidentally hover) and is inconsistently announced by screen readers.
+**Action:** Wrap abbreviated technical terms in `<abbr title="...">` to provide standard semantic meaning, ensuring screen readers can access the expansion and browsers provide a default visual affordance (dotted underline) indicating a tooltip is available.
+
+## 2026-03-20 - ARIA Key Shortcuts
+**Learning:** Providing visual shortcut hints (e.g. `Ctrl+Enter`) inside buttons is great for sighted users but lacks programmatic exposure for assistive technologies.
+**Action:** Always pair visual keyboard shortcut hints with the `aria-keyshortcuts` attribute on the target element to ensure screen readers announce the available shortcut.
