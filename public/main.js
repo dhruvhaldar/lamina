@@ -145,7 +145,17 @@ async function copyToClipboard(btn) {
     }
 }
 
+function validateInputs() {
+    const invalidInput = document.querySelector('input:invalid, select:invalid');
+    if (invalidInput) {
+        invalidInput.reportValidity();
+        return false;
+    }
+    return true;
+}
+
 async function calculate(btn) {
+    if (!validateInputs()) return;
     setLoading(btn, true);
     try {
         const data = await getLaminateData();
@@ -190,6 +200,7 @@ async function calculate(btn) {
 }
 
 async function plotPolar(btn) {
+    if (!validateInputs()) return;
     setLoading(btn, true);
     try {
         const data = await getLaminateData();
@@ -221,6 +232,7 @@ async function plotPolar(btn) {
 }
 
 async function plotEnvelope(btn) {
+    if (!validateInputs()) return;
     setLoading(btn, true);
     try {
         const lamData = await getLaminateData();
