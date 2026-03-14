@@ -12,9 +12,10 @@ function drawEnvelope(data) {
         .attr("width", width)
         .attr("height", height)
         .attr("role", "img")
-        .attr("aria-label", "Tsai-Wu Failure Envelope: A 2D plot showing the safe operating limits for biaxial stress (Sigma X vs Sigma Y).");
+        .attr("aria-labelledby", "envelope-plot-title");
 
     svg.append("title")
+        .attr("id", "envelope-plot-title")
         .text("Tsai-Wu Failure Envelope: A 2D plot showing the safe operating limits for biaxial stress (Sigma X vs Sigma Y).");
 
     const g = svg.append("g")

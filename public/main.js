@@ -21,7 +21,7 @@ function setLoading(btn, isLoading) {
         btn.setAttribute('disabled', 'true');
         btn.setAttribute('aria-busy', 'true');
         btn.dataset.originalHtml = btn.innerHTML;
-        btn.innerHTML = '<span class="spinner"></span> Processing...';
+        btn.innerHTML = '<span class="spinner" aria-hidden="true"></span> Processing...';
     } else {
         btn.removeAttribute('disabled');
         btn.setAttribute('aria-busy', 'false');
@@ -123,6 +123,10 @@ async function copyToClipboard(btn) {
     try {
         await navigator.clipboard.writeText(text);
         const originalContent = btn.innerHTML;
+        const originalAriaLabel = btn.getAttribute('aria-label');
+
+        // Update aria-label so screen readers announce the state change
+        btn.setAttribute('aria-label', 'Copied!');
 
         // Visual feedback
         btn.innerHTML = `
@@ -136,6 +140,11 @@ async function copyToClipboard(btn) {
 
         setTimeout(() => {
             btn.innerHTML = originalContent;
+            if (originalAriaLabel) {
+                btn.setAttribute('aria-label', originalAriaLabel);
+            } else {
+                btn.removeAttribute('aria-label');
+            }
             btn.style.color = '';
             btn.style.borderColor = '';
         }, 2000);
