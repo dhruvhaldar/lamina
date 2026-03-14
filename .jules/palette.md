@@ -25,3 +25,11 @@
 ## 2026-03-20 - ARIA Key Shortcuts
 **Learning:** Providing visual shortcut hints (e.g. `Ctrl+Enter`) inside buttons is great for sighted users but lacks programmatic exposure for assistive technologies.
 **Action:** Always pair visual keyboard shortcut hints with the `aria-keyshortcuts` attribute on the target element to ensure screen readers announce the available shortcut.
+
+## 2026-03-24 - Stateful Buttons and ARIA Labels
+**Learning:** When a button briefly changes state (e.g., to "Copied!"), changing the innerHTML alone is not sufficient if the button originally relied on an `aria-label`. The `aria-label` will override the new inner text for screen readers, preventing them from hearing the success state.
+**Action:** Always temporarily update the `aria-label` attribute (and restore it afterwards) when providing temporary visual state changes on buttons to ensure screen readers announce the new state.
+
+## 2026-03-24 - D3 SVG Accessibility
+**Learning:** Appending a `<title>` to a `<svg>` element generated via D3 is not sufficient for robust accessibility; many screen readers will ignore it.
+**Action:** Always add an explicit ID to the appended `<title>` element and link the parent `<svg>` to it using `aria-labelledby="[id]"`.

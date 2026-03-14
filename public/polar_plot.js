@@ -13,9 +13,10 @@ function drawPolar(data) {
         .attr("width", width)
         .attr("height", height)
         .attr("role", "img")
-        .attr("aria-label", "Stiffness Polar Plot: A radar chart visualizing the directional Young's Modulus (Ex) of the laminate.");
+        .attr("aria-labelledby", "polar-plot-title");
 
     svgContainer.append("title")
+        .attr("id", "polar-plot-title")
         .text("Stiffness Polar Plot: A radar chart visualizing the directional Young's Modulus (Ex) of the laminate.");
 
     const svg = svgContainer
