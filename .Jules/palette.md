@@ -74,3 +74,7 @@
 ## 2024-05-28 - Trigger Native HTML5 Validation Before API Requests
 **Learning:** Even without an explicit `<form>` wrapper, native HTML5 form validation (e.g., `required`, `type="number"`) can be utilized by manually querying for invalid inputs (`document.querySelector('input:invalid, select:invalid')`) and invoking `.reportValidity()` on them. This surfaces immediate, accessible, browser-native validation tooltips instead of waiting for generic server-side validation error toasts.
 **Action:** Always verify if frontend user interactions (like clicking a submit or calculate button outside of a traditional form submission) bypass native HTML5 validation. If they do, manually invoke `.reportValidity()` on invalid fields before making API requests to provide superior localized feedback.
+
+## 2026-03-12 - Aligning Native and Custom Validation States
+**Learning:** Pre-submission validation functions that only query for native `:invalid` states will fail to catch fields flagged by custom JavaScript validation (`aria-invalid="true"`), resulting in unnecessary API calls and generic server-side errors rather than utilizing existing real-time inline feedback.
+**Action:** Always include `[aria-invalid="true"]` selectors when checking form validity before submission. If native `reportValidity()` cannot be invoked, manually call `.focus()` on the invalid element to direct the user's attention to the inline accessibility error message.

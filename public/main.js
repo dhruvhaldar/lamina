@@ -155,9 +155,13 @@ async function copyToClipboard(btn) {
 }
 
 function validateInputs() {
-    const invalidInput = document.querySelector('input:invalid, select:invalid');
+    const invalidInput = document.querySelector('input:invalid, select:invalid, [aria-invalid="true"]');
     if (invalidInput) {
-        invalidInput.reportValidity();
+        if (typeof invalidInput.reportValidity === 'function' && invalidInput.matches(':invalid')) {
+            invalidInput.reportValidity();
+        } else {
+            invalidInput.focus();
+        }
         return false;
     }
     return true;
