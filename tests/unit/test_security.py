@@ -67,6 +67,18 @@ def test_valid_file_access():
     # Use realpath to be safe in comparison
     assert os.path.realpath(response.path) == os.path.realpath("public/index.html")
 
+def test_null_byte_injection():
+    """
+    Test that null byte injection is blocked to prevent 500 errors.
+    """
+    filename = "index.html\x00"
+
+    with pytest.raises(HTTPException) as excinfo:
+        read_file(filename)
+
+    assert excinfo.value.status_code == 400
+    assert excinfo.value.detail == "Invalid filename"
+
 def test_blocked_file_extension():
     """
     Test that files with disallowed extensions are blocked even if they exist in public/.

@@ -197,8 +197,14 @@ ALLOWED_EXTENSIONS = {'.html', '.css', '.js', '.json', '.png', '.jpg', '.jpeg', 
 
 @app.get("/{filename}")
 def read_file(filename: str = Path(..., max_length=255)):
+    if '\x00' in filename:
+        raise HTTPException(status_code=400, detail="Invalid filename")
+
     base_dir = os.path.realpath("public")
-    requested_path = os.path.realpath(os.path.join(base_dir, filename))
+    try:
+        requested_path = os.path.realpath(os.path.join(base_dir, filename))
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid filename")
 
     # Verify the path is within the public directory
     # os.path.commonpath correctly resolves symlinks and ..
