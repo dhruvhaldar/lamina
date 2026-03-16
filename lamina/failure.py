@@ -158,7 +158,8 @@ class FailureCriterion:
         F66 = 1/(S**2)
         F12 = -0.5 * np.sqrt(F11 * F22)
 
-        angles = np.linspace(0, 2*np.pi, num_points)
+        # Optimization: np.arange and simple math is significantly faster than np.linspace for small arrays
+        angles = np.arange(num_points, dtype=np.float64) * (2 * np.pi / max(1, num_points - 1))
         h = laminate.total_thickness
 
         sx_unit, sy_unit, s1_all, s2_all, t12_all = FailureCriterion._get_stresses_vectorized(laminate, angles, h)
@@ -218,7 +219,8 @@ class FailureCriterion:
         Yc = limits['yc']
         S = limits.get('s', limits.get('S', Xt/2))
 
-        angles = np.linspace(0, 2*np.pi, num_points)
+        # Optimization: np.arange and simple math is significantly faster than np.linspace for small arrays
+        angles = np.arange(num_points, dtype=np.float64) * (2 * np.pi / max(1, num_points - 1))
         h = laminate.total_thickness
 
         sx_unit, sy_unit, s1_all, s2_all, t12_all = FailureCriterion._get_stresses_vectorized(laminate, angles, h)
@@ -248,7 +250,8 @@ class FailureCriterion:
         Yc = limits['yc']
         S = limits.get('s', limits.get('S', Xt/2))
 
-        angles = np.linspace(0, 2*np.pi, num_points)
+        # Optimization: np.arange and simple math is significantly faster than np.linspace for small arrays
+        angles = np.arange(num_points, dtype=np.float64) * (2 * np.pi / max(1, num_points - 1))
         h = laminate.total_thickness
 
         sx_unit, sy_unit, s1_all, s2_all, t12_all = FailureCriterion._get_stresses_vectorized(laminate, angles, h)
