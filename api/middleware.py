@@ -78,44 +78,41 @@ class PayloadSizeLimitMiddleware:
         if scope["type"] != "http":
             return await self.app(scope, receive, send)
 
-        if scope["method"] in ("POST", "PUT", "PATCH"):
-            # Check Content-Length header first for early rejection
-            headers = dict(scope.get("headers", []))
-            content_length = headers.get(b"content-length")
-            if content_length:
-                try:
-                    if int(content_length) > self.limit:
-                        await self.send_413(send)
-                        return
-                except ValueError:
-                    await self.send_400(send, "Invalid Content-Length")
-                    return
-
-            total_size = 0
-
-            async def wrapped_receive() -> Message:
-                nonlocal total_size
-                message = await receive()
-                if message["type"] == "http.request":
-                    body = message.get("body", b"")
-                    total_size += len(body)
-                    if total_size > self.limit:
-                        raise RuntimeError("Payload Too Large")
-                return message
-
+        # Check Content-Length header first for early rejection
+        headers = dict(scope.get("headers", []))
+        content_length = headers.get(b"content-length")
+        if content_length:
             try:
-                await self.app(scope, wrapped_receive, send)
-            except RuntimeError as exc:
-                if str(exc) == "Payload Too Large":
-                    # Attempt to send 413 response if app crashes due to large payload
-                    try:
-                        await self.send_413(send)
-                    except Exception:
-                        pass
+                if int(content_length) > self.limit:
+                    await self.send_413(send)
                     return
-                raise
-        else:
-            await self.app(scope, receive, send)
+            except ValueError:
+                await self.send_400(send, "Invalid Content-Length")
+                return
+
+        total_size = 0
+
+        async def wrapped_receive() -> Message:
+            nonlocal total_size
+            message = await receive()
+            if message["type"] == "http.request":
+                body = message.get("body", b"")
+                total_size += len(body)
+                if total_size > self.limit:
+                    raise RuntimeError("Payload Too Large")
+            return message
+
+        try:
+            await self.app(scope, wrapped_receive, send)
+        except RuntimeError as exc:
+            if str(exc) == "Payload Too Large":
+                # Attempt to send 413 response if app crashes due to large payload
+                try:
+                    await self.send_413(send)
+                except Exception:
+                    pass
+                return
+            raise
 
     async def send_413(self, send: Send):
         await send({
