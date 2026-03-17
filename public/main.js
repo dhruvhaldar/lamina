@@ -199,7 +199,7 @@ async function calculate(btn) {
                     </svg>
                     Copy
                 </button>
-                <pre>${formatMatrix(result.ABD)}</pre>
+                <pre tabindex="0">${formatMatrix(result.ABD)}</pre>
             </div>
         `;
         abdOut.classList.remove('empty-state');
