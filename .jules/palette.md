@@ -33,3 +33,15 @@
 ## 2026-03-24 - D3 SVG Accessibility
 **Learning:** Appending a `<title>` to a `<svg>` element generated via D3 is not sufficient for robust accessibility; many screen readers will ignore it.
 **Action:** Always add an explicit ID to the appended `<title>` element and link the parent `<svg>` to it using `aria-labelledby="[id]"`.
+
+## 2026-03-30 - Scrollable Regions and Keyboard Access
+**Learning:** Elements like `<pre>` containing code or matrix outputs often become scrollable on smaller screens or when content overflows. If they lack focusability, keyboard-only users cannot scroll them to read the full content.
+**Action:** Always add `tabindex="0"` to scrollable regions (like `<pre>` blocks) so they can receive keyboard focus and be scrolled using arrow keys.
+
+## 2026-03-30 - Success Toast Color Contrast
+**Learning:** Using default "success" green colors (like `#2ecc71` or `#1e8449`) on very light green backgrounds (like `#f0fdf4`) often fails WCAG AA minimum contrast ratio (4.5:1) for normal text.
+**Action:** Explicitly darken success text colors (e.g., `#145c32`) when used against lightly tinted backgrounds to ensure readability for all users while maintaining the semantic color scheme.
+
+## 2026-03-30 - Shortcut Hint Color Contrast
+**Learning:** Semi-transparent white backgrounds and borders (e.g., `rgba(255, 255, 255, 0.2)`) on keyboard shortcut hints placed inside blue buttons fail WCAG AA contrast ratios because the white text blends too much with the blended background.
+**Action:** Use semi-transparent black overlays (e.g., `rgba(0, 0, 0, 0.25)`) to darken the hint background against the button color, increasing the contrast of the white text.
