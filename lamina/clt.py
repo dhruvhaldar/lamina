@@ -261,31 +261,32 @@ class Laminate:
         angles = np.arange(0, 360, step)
         h = self.total_thickness
 
-        # Optimization: Directly transform compliance matrix components instead of
-        # transforming stiffness (ABD), assembling 6x6, and inverting it N times.
-        # This reduces complexity from O(N * 6^3) to O(N * 3^3).
+        # Optimization: Directly transform compliance matrix components algebraically
+        # instead of matrix multiplication (T_epsilon @ a @ T_sigma^-1).
+        # Expanding the matrix operations manually for a00, a11, a22 avoids allocating
+        # and populating intermediate 3x3xN transformation arrays entirely.
 
-        # We need to transform the compliance matrix 'abd'.
-        # The transformation rule for compliance S is S' = T_epsilon @ S @ T_sigma^-1
-        # where T_epsilon is the strain transformation matrix and T_sigma is stress transformation.
-
-        # We can obtain T_epsilon and T_sigma^-1 by calling _get_transformation_matrices with -angles.
-        # _get_transformation_matrices(theta) returns (T_sigma(theta), T_epsilon_inv(theta)).
-        # T_sigma(-theta) = T_sigma(theta)^-1  (Inverse of stress transformation)
-        # T_epsilon_inv(-theta) = T_epsilon(theta) (Strain transformation)
-
-        T_sigma_inv, T_epsilon = _get_transformation_matrices(-angles)
-
-        # We only need the top-left 3x3 block of the transformed compliance matrix (a')
-        # to calculate in-plane engineering constants (Ex, Ey, Gxy).
-        # a' = T_epsilon @ a @ T_sigma_inv
         a = self.abd[:3, :3]
-        a_prime = _apply_transformation(a, T_epsilon, T_sigma_inv)
+        S11, S12, S16 = a[0, 0], a[0, 1], a[0, 2]
+        S21, S22, S26 = a[1, 0], a[1, 1], a[1, 2]
+        S61, S62, S66 = a[2, 0], a[2, 1], a[2, 2]
 
-        # Extract elements from transformed 3x3 compliance blocks
-        a00 = a_prime[:, 0, 0]
-        a11 = a_prime[:, 1, 1]
-        a22 = a_prime[:, 2, 2]
+        rads = np.radians(angles)
+        c = np.cos(rads)
+        # Using -angles implicitly as T_sigma(-theta) corresponds to stress transformation inverse
+        s = -np.sin(rads)
+
+        c2 = c * c
+        s2 = s * s
+        cs = c * s
+        c4 = c2 * c2
+        s4 = s2 * s2
+        c2s2 = c2 * s2
+        c2_s2 = c2 - s2
+
+        a00 = S11*c4 + S22*s4 + c2s2*(S12 + S21 + S66) - cs*c2*(S61 + S16) - cs*s2*(S62 + S26)
+        a11 = S11*s4 + S22*c4 + c2s2*(S12 + S21 + S66) + cs*s2*(S61 + S16) + cs*c2*(S62 + S26)
+        a22 = 4*c2s2*(S11 - S21 - S12 + S22) + 2*cs*c2_s2*(S61 - S62 + S16 - S26) + c2_s2*c2_s2*S66
 
         # Optimization: Use np.divide instead of manual masking to reduce array loops and boolean array overhead
         h_inv = 1.0 / h
