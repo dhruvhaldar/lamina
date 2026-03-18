@@ -36,7 +36,7 @@ label {
     margin-bottom: 5px;
     font-weight: bold;
 }
-input, select {
+input:not([type="checkbox"]):not([type="radio"]), select {
     width: 100%;
     padding: 8px;
     border: 1px solid #ccc;
@@ -303,4 +303,12 @@ input[aria-invalid="true"]:focus-visible {
 /* Results Grid */
 .results-grid {
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+
+/* Palette: Checkbox and Radio styling */
+input[type="checkbox"], input[type="radio"] {
+    width: auto;
+    margin-left: 8px;
+    cursor: pointer;
+    vertical-align: middle;
 }
