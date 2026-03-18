@@ -167,41 +167,26 @@ class FailureCriterion:
         A = F11*s1_all**2 + F22*s2_all**2 + F66*t12_all**2 + 2*F12*s1_all*s2_all
         B = F1*s1_all + F2*s2_all
 
-        mask_linear = np.abs(A) < 1e-10
-        f_all = np.full_like(A, np.inf)
+        delta = np.square(B) + 4 * A
 
-        if np.any(mask_linear):
-            B_lin = B[mask_linear]
-            with np.errstate(divide='ignore', invalid='ignore'):
-                f_lin = np.where(B_lin > 0, 1.0/B_lin, np.inf)
-            f_all[mask_linear] = f_lin
+        with np.errstate(divide='ignore', invalid='ignore'):
+            sqrt_delta = np.sqrt(delta)
 
-        mask_quad = ~mask_linear
-        if np.any(mask_quad):
-            A_q = A[mask_quad]
-            B_q = B[mask_quad]
-            delta = B_q**2 + 4*A_q
+            # Quadratic solutions
+            two_A = 2 * A
+            f1_quad = (-B + sqrt_delta) / two_A
+            f2_quad = (-B - sqrt_delta) / two_A
 
-            valid_delta = delta >= 0
-            if np.any(valid_delta):
-                A_vq = A_q[valid_delta]
-                B_vq = B_q[valid_delta]
-                sqrt_delta = np.sqrt(delta[valid_delta])
+            # Linear solutions
+            f_lin = 1.0 / B
 
-                f1 = (-B_vq + sqrt_delta) / (2*A_vq)
-                f2 = (-B_vq - sqrt_delta) / (2*A_vq)
+            # Handle solutions efficiently using nested np.where to avoid generating multiple boolean masks and arrays
+            f_quad = np.where((delta >= 0) & (f1_quad > 0), f1_quad,
+                              np.where((delta >= 0) & (f2_quad > 0), f2_quad, np.inf))
 
-                f_final = np.full_like(f1, np.inf)
-
-                mask_f1 = f1 > 0
-                mask_f2 = (f2 > 0) & (~mask_f1)
-
-                f_final[mask_f1] = f1[mask_f1]
-                f_final[mask_f2] = f2[mask_f2]
-
-                f_quad = np.full(mask_quad.sum(), np.inf)
-                f_quad[valid_delta] = f_final
-                f_all[mask_quad] = f_quad
+            f_all = np.where(np.abs(A) < 1e-10,
+                             np.where(B > 0, f_lin, np.inf),
+                             f_quad)
 
         min_factor = np.min(f_all, axis=0)
 
