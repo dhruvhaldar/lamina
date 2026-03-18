@@ -78,3 +78,7 @@
 ## 2026-03-12 - Aligning Native and Custom Validation States
 **Learning:** Pre-submission validation functions that only query for native `:invalid` states will fail to catch fields flagged by custom JavaScript validation (`aria-invalid="true"`), resulting in unnecessary API calls and generic server-side errors rather than utilizing existing real-time inline feedback.
 **Action:** Always include `[aria-invalid="true"]` selectors when checking form validity before submission. If native `reportValidity()` cannot be invoked, manually call `.focus()` on the invalid element to direct the user's attention to the inline accessibility error message.
+
+## 2026-03-18 - Checkbox and Radio Button Styling
+**Learning:** Applying `width: 100%` globally to the `input` selector causes checkboxes and radio buttons to stretch across their containers, severely breaking the layout and looking unpolished.
+**Action:** Always use `:not([type="checkbox"]):not([type="radio"])` or more specific attribute selectors (like `input[type="text"]`, `input[type="number"]`) when applying global sizing rules (like `width: 100%` or heavy padding) to inputs. Add specific blocks for checkboxes to ensure `width: auto` and proper vertical alignment.
