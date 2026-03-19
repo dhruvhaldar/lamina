@@ -86,24 +86,33 @@ function initStackPreview() {
             }
         }
 
-        // Generate visual badges
-        const badges = rawPlies.map(angle => {
+        // Generate visual badges securely to prevent XSS
+        preview.innerHTML = ''; // Clear previous content
+
+        rawPlies.forEach(angle => {
             // Composite angle (CCW) vs CSS rotation (CW)
             // 0 deg = horizontal. 90 deg = vertical.
-            return `<span class="ply-badge">
-                <span class="ply-icon" data-angle="${angle}"></span>${angle}°
-            </span>`;
-        }).join('');
+            const badge = document.createElement('span');
+            badge.className = 'ply-badge';
+
+            const icon = document.createElement('span');
+            icon.className = 'ply-icon';
+            icon.setAttribute('data-angle', angle);
+            icon.style.transform = `rotate(-${angle}deg)`;
+
+            badge.appendChild(icon);
+            badge.appendChild(document.createTextNode(`${angle}°`));
+
+            preview.appendChild(badge);
+        });
 
         const count = rawPlies.length * (symmetric ? 2 : 1);
         const totalThick = count * plyThick;
-        const thicknessText = `<span class="thickness-hint">Total: ${formatMetric(totalThick, 'm')} (${symmetric ? 'Sym' : 'Total'})</span>`;
 
-        preview.innerHTML = badges + thicknessText;
-
-        preview.querySelectorAll('.ply-icon').forEach((icon) => {
-            icon.style.transform = `rotate(-${icon.getAttribute('data-angle')}deg)`;
-        });
+        const thicknessHint = document.createElement('span');
+        thicknessHint.className = 'thickness-hint';
+        thicknessHint.textContent = `Total: ${formatMetric(totalThick, 'm')} (${symmetric ? 'Sym' : 'Total'})`;
+        preview.appendChild(thicknessHint);
         preview.style.color = '';
         stackInput.removeAttribute('aria-invalid');
     };
