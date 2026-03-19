@@ -46,12 +46,15 @@ class FailureCriterion:
         sx_unit = np.cos(angles)
         sy_unit = np.sin(angles)
 
-        NM = np.zeros((6, len(angles)))
-        NM[0, :] = sx_unit * h
-        NM[1, :] = sy_unit * h
+        # Optimization: Only explicitly allocate the non-zero rows of the NM matrix
+        # and slice the abd matrix to avoid processing known zeros, which significantly
+        # reduces redundant floating-point operations during matrix multiplication.
+        NM_reduced = np.empty((2, len(angles)))
+        NM_reduced[0, :] = sx_unit * h
+        NM_reduced[1, :] = sy_unit * h
 
         # strain_curvature: (6, n_angles)
-        strain_curvature = laminate.abd @ NM
+        strain_curvature = laminate.abd[:, :2] @ NM_reduced
         eps0 = strain_curvature[:3, :] # (3, n_angles)
         kappa = strain_curvature[3:, :] # (3, n_angles)
 
