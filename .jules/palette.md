@@ -45,3 +45,7 @@
 ## 2026-03-30 - Shortcut Hint Color Contrast
 **Learning:** Semi-transparent white backgrounds and borders (e.g., `rgba(255, 255, 255, 0.2)`) on keyboard shortcut hints placed inside blue buttons fail WCAG AA contrast ratios because the white text blends too much with the blended background.
 **Action:** Use semi-transparent black overlays (e.g., `rgba(0, 0, 0, 0.25)`) to darken the hint background against the button color, increasing the contrast of the white text.
+
+## 2026-03-31 - Dynamic State Color Contrast
+**Learning:** Hardcoded inline "success" colors (like `#1e8449`) on dynamic elements (like a copy button with a `#f8f9fa` background) often fail WCAG AA minimum contrast ratios.
+**Action:** Always verify contrast ratios for dynamic state changes and explicitly use darkened success text colors (e.g., `#145c32`) on light backgrounds.
