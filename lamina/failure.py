@@ -173,23 +173,18 @@ class FailureCriterion:
         delta = np.square(B) + 4 * A
 
         with np.errstate(divide='ignore', invalid='ignore'):
+            # Optimization: Mathematically, A is always non-negative because the
+            # Tsai-Wu coefficients form a positive-definite matrix. Thus, delta >= 0
+            # and sqrt_delta >= |B|. The only positive root is f1_quad.
+            # This completely avoids allocating and selecting between intermediate root arrays.
             sqrt_delta = np.sqrt(delta)
+            f1_quad = (-B + sqrt_delta) / (2 * A)
 
-            # Quadratic solutions
-            two_A = 2 * A
-            f1_quad = (-B + sqrt_delta) / two_A
-            f2_quad = (-B - sqrt_delta) / two_A
-
-            # Linear solutions
             f_lin = 1.0 / B
 
-            # Handle solutions efficiently using nested np.where to avoid generating multiple boolean masks and arrays
-            f_quad = np.where((delta >= 0) & (f1_quad > 0), f1_quad,
-                              np.where((delta >= 0) & (f2_quad > 0), f2_quad, np.inf))
-
-            f_all = np.where(np.abs(A) < 1e-10,
+            f_all = np.where(A < 1e-10,
                              np.where(B > 0, f_lin, np.inf),
-                             f_quad)
+                             f1_quad)
 
         min_factor = np.min(f_all, axis=0)
 

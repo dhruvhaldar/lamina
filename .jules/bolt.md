@@ -40,3 +40,7 @@
 ## 2026-04-06 - [Avoid Multiplying by Zeroed Rows in Matrix Operations]
 **Learning:** In `FailureCriterion._get_stresses_vectorized`, creating a full 6xN matrix where rows 2-5 are zeros and performing a full matrix multiplication `laminate.abd @ NM` wastes significant compute on zero operations. Explicitly explicitly allocating only the non-zero rows of the NM matrix (`NM_reduced`, shape 2xN) and multiplying by sliced non-zero columns of `laminate.abd[:, :2] @ NM_reduced` avoids these redundant operations, yielding roughly a ~2x performance speedup without changing the output.
 **Action:** When performing matrix multiplication where one matrix contains rows or columns of known zeros, explicitly slice the matrices to exclude the zeroed dimensions.
+
+## 2026-04-06 - [Tsai-Wu Positive Root Mathematical Reduction]
+**Learning:** The quadratic term `A` in the Tsai-Wu failure criterion calculation (`A * f^2 + B * f - 1 = 0`) is mathematically strictly non-negative because the material limits form a positive-definite matrix (`F11*F22 > F12^2`). Consequently, the discriminant `delta` is always positive and `sqrt(delta) >= |B|`. This means `f1_quad = (-B + sqrt(delta)) / 2A` is guaranteed to be the only valid, positive root.
+**Action:** Avoid allocating and testing arrays for negative quadratic roots (`f2_quad = (-B - sqrt_delta) / 2A`) and discriminant bounds checks (`delta >= 0`) in Tsai-Wu optimizations. Removing this defensive nesting of `np.where` reduces branch overhead significantly without altering mathematical correctness.
