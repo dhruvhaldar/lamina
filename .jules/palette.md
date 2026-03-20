@@ -49,3 +49,11 @@
 ## 2026-03-31 - Dynamic State Color Contrast
 **Learning:** Hardcoded inline "success" colors (like `#1e8449`) on dynamic elements (like a copy button with a `#f8f9fa` background) often fail WCAG AA minimum contrast ratios.
 **Action:** Always verify contrast ratios for dynamic state changes and explicitly use darkened success text colors (e.g., `#145c32`) on light backgrounds.
+
+## 2026-04-01 - Scrollable Regions Focus Indicators
+**Learning:** While adding `tabindex="0"` to scrollable regions (like `<pre>` blocks) allows keyboard access, relying on default browser focus outlines leads to inconsistent or invisible focus states, leaving keyboard users confused about their current position.
+**Action:** Always explicitly define `:focus-visible` styles (e.g., matching inputs and buttons) for scrollable regions to ensure clear, consistent visual feedback across all browsers.
+
+## 2026-04-01 - Label Pointer Affordance
+**Learning:** Sighted users often don't realize that clicking a text label will focus the associated form input unless there is a visual affordance.
+**Action:** Always add `cursor: pointer` to `<label>` elements to provide immediate visual feedback that they are interactive.
