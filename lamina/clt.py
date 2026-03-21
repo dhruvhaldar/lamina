@@ -160,6 +160,30 @@ class Laminate:
         self.ABD[3:, :3] = self.B
         self.ABD[3:, 3:] = self.D
 
+        # Optimization: Pre-compute K_all and K_all_z for failure calculations
+        # This saves significant overhead in tight loops inside FailureCriterion
+        Q = self.material.Q()
+        c2 = self.c * self.c
+        s2 = self.s * self.s
+        cs = self.c * self.s
+        n_plies = len(self.stack)
+
+        T_all = np.empty((n_plies, 3, 3))
+        T_all[:, 0, 0] = c2
+        T_all[:, 0, 1] = s2
+        T_all[:, 0, 2] = cs
+        T_all[:, 1, 0] = s2
+        T_all[:, 1, 1] = c2
+        T_all[:, 1, 2] = -cs
+        T_all[:, 2, 0] = -2*cs
+        T_all[:, 2, 1] = 2*cs
+        T_all[:, 2, 2] = c2 - s2
+
+        self.K_all = Q @ T_all
+
+        z_mids = (zk + zk_1) / 2
+        self.K_all_z = self.K_all * z_mids[:, np.newaxis, np.newaxis]
+
         # Invalidate cached compliance matrix
         self._abd = None
 
