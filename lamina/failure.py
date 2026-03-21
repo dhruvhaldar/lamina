@@ -58,44 +58,9 @@ class FailureCriterion:
         eps0 = strain_curvature[:3, :] # (3, n_angles)
         kappa = strain_curvature[3:, :] # (3, n_angles)
 
-        Q = laminate.material.Q() # (3, 3)
-
-        # Use precomputed trig values from laminate.c and laminate.s
-        c = laminate.c
-        s = laminate.s
-
-        c2 = c*c
-        s2 = s*s
-        cs = c*s
-
-        n_plies = len(laminate.stack)
-
-        # Vectorized computation of T for all plies at once
-        T_all = np.empty((n_plies, 3, 3))
-        T_all[:, 0, 0] = c2
-        T_all[:, 0, 1] = s2
-        T_all[:, 0, 2] = cs
-        T_all[:, 1, 0] = s2
-        T_all[:, 1, 1] = c2
-        T_all[:, 1, 2] = -cs
-        T_all[:, 2, 0] = -2*cs
-        T_all[:, 2, 1] = 2*cs
-        T_all[:, 2, 2] = c2 - s2
-
-        # Vectorized matmul: K = Q @ T
-        # Q is (3,3), T_all is (n_plies, 3, 3). Result K_all is (n_plies, 3, 3)
-        K_all = Q @ T_all
-
-        # Vectorized computation of A_all and B_all
-        # K_all: (n_plies, 3, 3), eps0/kappa: (3, n_angles)
-        # Result A_all/B_all: (n_plies, 3, n_angles)
-        A_all = K_all @ eps0
-        B_all = K_all @ kappa
-
-        z_mids = (laminate.z_coords[:-1] + laminate.z_coords[1:]) / 2
-        z_mids = z_mids[:, np.newaxis, np.newaxis]
-
-        S_all = A_all + z_mids * B_all
+        # Optimization: Use precomputed K_all and K_all_z matrices from Laminate
+        # to avoid recalculating T_all matrices and K_all @ kappa for every point/loop
+        S_all = laminate.K_all @ eps0 + laminate.K_all_z @ kappa
 
         return sx_unit, sy_unit, S_all[:, 0, :], S_all[:, 1, :], S_all[:, 2, :]
 
