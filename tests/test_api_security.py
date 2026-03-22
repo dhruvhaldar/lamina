@@ -20,7 +20,7 @@ def test_security_headers_root():
     assert headers["X-Frame-Options"] == "DENY"
 
     assert "Strict-Transport-Security" in headers
-    assert headers["Strict-Transport-Security"] == "max-age=31536000; includeSubDomains"
+    assert headers["Strict-Transport-Security"] == "max-age=31536000; includeSubDomains; preload"
 
     assert "Content-Security-Policy" in headers
     csp = headers["Content-Security-Policy"]
@@ -34,6 +34,9 @@ def test_security_headers_root():
 
     assert "Permissions-Policy" in headers
     assert headers["Permissions-Policy"] == "camera=(), microphone=(), geolocation=()"
+
+    assert "Cache-Control" in headers
+    assert headers["Cache-Control"] == "no-store, no-cache, must-revalidate, max-age=0"
 
 def test_security_headers_calculate():
     """
@@ -62,7 +65,7 @@ def test_security_headers_calculate():
     assert headers["X-Frame-Options"] == "DENY"
 
     assert "Strict-Transport-Security" in headers
-    assert headers["Strict-Transport-Security"] == "max-age=31536000; includeSubDomains"
+    assert headers["Strict-Transport-Security"] == "max-age=31536000; includeSubDomains; preload"
 
     assert "Content-Security-Policy" in headers
     csp = headers["Content-Security-Policy"]
@@ -70,6 +73,9 @@ def test_security_headers_calculate():
     # Ensure unsafe-inline is NOT in script-src
     script_src = [p for p in csp.split(';') if 'script-src' in p][0]
     assert "'unsafe-inline'" not in script_src
+
+    assert "Cache-Control" in headers
+    assert headers["Cache-Control"] == "no-store, no-cache, must-revalidate, max-age=0"
 
 def test_payload_size_limit():
     """
