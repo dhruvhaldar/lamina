@@ -176,7 +176,8 @@ class FailureCriterion:
         X = np.where(s1_all >= 0, Xt, Xc)
         Y = np.where(s2_all >= 0, Yt, Yc)
 
-        term = (s1_all/X)**2 - (s1_all*s2_all/X**2) + (s2_all/Y)**2 + (t12_all/S)**2
+        s1_X = s1_all / X
+        term = s1_X * (s1_X - s2_all / X) + np.square(s2_all / Y) + np.square(t12_all / S)
 
         f_all = np.full_like(term, np.inf)
         valid = term > 0
@@ -204,18 +205,15 @@ class FailureCriterion:
 
         sx_unit, sy_unit, s1_all, s2_all, t12_all = FailureCriterion._get_stresses_vectorized(laminate, angles, h)
 
-        f_s1 = np.full_like(s1_all, np.inf)
-        f_s1 = np.where(s1_all > 0, Xt/s1_all, f_s1)
-        # Avoid division by zero naturally as 0 is not < 0
-        f_s1 = np.where(s1_all < 0, -Xc/s1_all, f_s1)
-
-        f_s2 = np.full_like(s2_all, np.inf)
-        f_s2 = np.where(s2_all > 0, Yt/s2_all, f_s2)
-        f_s2 = np.where(s2_all < 0, -Yc/s2_all, f_s2)
-
-        f_t12 = np.full_like(t12_all, np.inf)
         with np.errstate(divide='ignore', invalid='ignore'):
-            f_t12 = np.where(t12_all != 0, S/np.abs(t12_all), np.inf)
+            f_s1 = np.where(s1_all > 0, Xt, -Xc) / s1_all
+            f_s1 = np.where(s1_all == 0, np.inf, f_s1)
+
+            f_s2 = np.where(s2_all > 0, Yt, -Yc) / s2_all
+            f_s2 = np.where(s2_all == 0, np.inf, f_s2)
+
+            f_t12 = S / np.abs(t12_all)
+            f_t12 = np.where(t12_all == 0, np.inf, f_t12)
 
         f_all = np.minimum(f_s1, np.minimum(f_s2, f_t12))
         min_factor = np.min(f_all, axis=0)
