@@ -22,7 +22,7 @@ h1, h2, h3 {
 }
 .input-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr));
     gap: 10px;
 }
 .input-row {
@@ -63,7 +63,7 @@ button:active {
 }
 .results {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 400px), 1fr));
     gap: 20px;
 }
 pre {

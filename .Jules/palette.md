@@ -1,9 +1,14 @@
-## 2025-02-14 - Async Operation Feedback
-**Learning:** Users lack visibility into long-running calculations (1-2s), leading to potential double submissions.
-**Action:** Implement a reusable  helper for all async buttons to manage disabled state, aria-busy, and visual spinner.
+## 2024-05-28 - Trigger Native HTML5 Validation Before API Requests
+**Learning:** Even without an explicit `<form>` wrapper, native HTML5 form validation (e.g., `required`, `type="number"`) can be utilized by manually querying for invalid inputs (`document.querySelector('input:invalid, select:invalid')`) and invoking `.reportValidity()` on them. This surfaces immediate, accessible, browser-native validation tooltips instead of waiting for generic server-side validation error toasts.
+**Action:** Always verify if frontend user interactions (like clicking a submit or calculate button outside of a traditional form submission) bypass native HTML5 validation. If they do, manually invoke `.reportValidity()` on invalid fields before making API requests to provide superior localized feedback.
+
 ## 2025-02-14 - Async Operation Feedback
 **Learning:** Users lack visibility into long-running calculations (1-2s), leading to potential double submissions.
 **Action:** Implement a reusable `setLoading` helper for all async buttons to manage disabled state, aria-busy, and visual spinner.
+
+## 2025-03-10 - Input Handling for Lists
+**Learning:** Users often copy-paste list data (like stacking sequences) in various formats (space-separated vs. comma-separated). Strict comma-only parsing leads to silent data dropping or errors.
+**Action:** Use regex-based splitting (`/[\s,]+/`) when parsing text inputs representing numerical lists to robustly handle spaces, commas, or combinations of both, ensuring data integrity regardless of input format.
 
 ## 2026-02-15 - Error Feedback
 **Learning:** Generic `alert()` messages ("Check inputs") frustrate users when backend provides specific validation details (e.g. "E1 must be positive").
@@ -48,6 +53,7 @@
 ## 2026-02-26 - Accessible Error States
 **Learning:** Setting `aria-invalid="true"` alone is insufficient; sighted users need corresponding visual cues to identify the exact field in error among many inputs.
 **Action:** Always pair `aria-invalid` attributes with global CSS rules that apply a visible error state (e.g., red border/outline) to ensure all users receive equivalent feedback.
+
 ## 2026-03-01 - Tactile Feedback and Consistency
 **Learning:** Users lack immediate visual confirmation when clicking buttons, and native `select` elements appear unstyled and lack clear keyboard focus indicators compared to text inputs.
 **Action:** Add `button:active { transform: scale(0.98); }` for click feedback and apply consistent styling and `:focus-visible` outlines to `select` elements.
@@ -64,16 +70,9 @@
 **Learning:** Providing real-time visual formatting alongside numeric inputs using `aria-hidden` makes it opaque to screen reader users, and failing to provide immediate inline validation for incorrect inputs (like negative values or empty stacks) before submission frustrates users.
 **Action:** Replace `aria-hidden` with `aria-live="polite"` and `aria-atomic="true"`, link the preview element to the input using `aria-describedby`, and provide immediate real-time validation (including changing text color and setting `aria-invalid="true"`) for improved accessibility and user experience.
 
-## 2025-03-10 - Input Handling for Lists
-**Learning:** Users often copy-paste list data (like stacking sequences) in various formats (space-separated vs. comma-separated). Strict comma-only parsing leads to silent data dropping or errors.
-**Action:** Use regex-based splitting (`/[\s,]+/`) when parsing text inputs representing numerical lists to robustly handle spaces, commas, or combinations of both, ensuring data integrity regardless of input format.
-
 ## 2026-03-11 - Preserving CSS Grid Layouts During Label Upgrades
 **Learning:** When upgrading implicitly wrapped labels (e.g., `<label>Text <input></label>`) to explicitly associated ones (using `for` and `id`), moving the `<input>` element outside of the `<label>` wrapper can break existing CSS Grid or Flexbox layouts that treat the original `<label>` as a single unified layout container.
 **Action:** When adding `for` attributes to explicitly link inputs for screen readers, carefully maintain the original nested HTML structure (e.g., `<label for="id">Text <input id="id"></label>`) unless CSS rules are also being refactored to accommodate separated elements.
-## 2024-05-28 - Trigger Native HTML5 Validation Before API Requests
-**Learning:** Even without an explicit `<form>` wrapper, native HTML5 form validation (e.g., `required`, `type="number"`) can be utilized by manually querying for invalid inputs (`document.querySelector('input:invalid, select:invalid')`) and invoking `.reportValidity()` on them. This surfaces immediate, accessible, browser-native validation tooltips instead of waiting for generic server-side validation error toasts.
-**Action:** Always verify if frontend user interactions (like clicking a submit or calculate button outside of a traditional form submission) bypass native HTML5 validation. If they do, manually invoke `.reportValidity()` on invalid fields before making API requests to provide superior localized feedback.
 
 ## 2026-03-12 - Aligning Native and Custom Validation States
 **Learning:** Pre-submission validation functions that only query for native `:invalid` states will fail to catch fields flagged by custom JavaScript validation (`aria-invalid="true"`), resulting in unnecessary API calls and generic server-side errors rather than utilizing existing real-time inline feedback.
@@ -86,3 +85,7 @@
 ## 2026-04-02 - Number Input Scroll Wheel Hijacking
 **Learning:** HTML `<input type="number">` elements hijack the mouse scroll wheel to increment/decrement values when focused. In engineering applications where inputs contain large scientific notation values (e.g., `140e9`), scrolling accidentally increments the value by 1 (e.g., `140000000001`), which is mathematically useless and corrupts user data without obvious visual indication.
 **Action:** Always add a global `wheel` event listener that blurs focused number inputs to prevent accidental value manipulation and allow normal, safe page scrolling.
+
+## 2026-05-15 - Responsive CSS Grid on Mobile Viewports
+**Learning:** Defining grid template columns with fixed pixel minimums using `minmax(Xpx, 1fr)` (e.g. `minmax(400px, 1fr)`) causes elements to overflow their containers on mobile devices with viewport widths smaller than the fixed minimum. This leads to broken layouts and unwanted horizontal scrolling.
+**Action:** Use `minmax(min(100%, Xpx), 1fr)` when configuring responsive grid columns. This allows grid items to gracefully shrink below their target width on small mobile viewports, while maintaining the intended layout on larger screens.
