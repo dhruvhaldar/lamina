@@ -13,9 +13,11 @@ def calculate_safety_factor(laminate, load, limits):
     Nxy = load.get('Nxy', 0)
 
     ABD_inv = laminate.abd
-    # Direct array construction is faster than concatenate
-    NM = np.array([Nx, Ny, Nxy, 0.0, 0.0, 0.0])
-    strain_curv = ABD_inv @ NM
+    # Optimization: When performing matrix multiplication where one matrix contains rows
+    # of known zeros (moments are zeroed), explicitly slicing the matrix (ABD_inv[:, :3])
+    # significantly reduces redundant floating-point operations.
+    NM_reduced = np.array([Nx, Ny, Nxy])
+    strain_curv = ABD_inv[:, :3] @ NM_reduced
     eps0 = strain_curv[:3]
     kap = strain_curv[3:]
 
