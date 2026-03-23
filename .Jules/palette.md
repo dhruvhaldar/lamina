@@ -82,3 +82,7 @@
 ## 2026-03-18 - Checkbox and Radio Button Styling
 **Learning:** Applying `width: 100%` globally to the `input` selector causes checkboxes and radio buttons to stretch across their containers, severely breaking the layout and looking unpolished.
 **Action:** Always use `:not([type="checkbox"]):not([type="radio"])` or more specific attribute selectors (like `input[type="text"]`, `input[type="number"]`) when applying global sizing rules (like `width: 100%` or heavy padding) to inputs. Add specific blocks for checkboxes to ensure `width: auto` and proper vertical alignment.
+
+## 2026-04-02 - Number Input Scroll Wheel Hijacking
+**Learning:** HTML `<input type="number">` elements hijack the mouse scroll wheel to increment/decrement values when focused. In engineering applications where inputs contain large scientific notation values (e.g., `140e9`), scrolling accidentally increments the value by 1 (e.g., `140000000001`), which is mathematically useless and corrupts user data without obvious visual indication.
+**Action:** Always add a global `wheel` event listener that blurs focused number inputs to prevent accidental value manipulation and allow normal, safe page scrolling.
