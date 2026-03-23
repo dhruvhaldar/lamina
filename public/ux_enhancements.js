@@ -275,6 +275,15 @@ function initMaterialLibrary() {
     });
 }
 
+function initPreventNumberInputScroll() {
+    // Prevent accidental value changes when scrolling over focused number inputs
+    document.addEventListener('wheel', (e) => {
+        if (document.activeElement && document.activeElement.type === 'number') {
+            document.activeElement.blur();
+        }
+    }, { passive: true });
+}
+
 // Initialize when DOM is ready
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
@@ -282,10 +291,12 @@ if (document.readyState === 'loading') {
         initStackPreview();
         initMaterialLibrary();
         initKeyboardShortcuts();
+        initPreventNumberInputScroll();
     });
 } else {
     initInputPreviews();
     initStackPreview();
     initMaterialLibrary();
     initKeyboardShortcuts();
+    initPreventNumberInputScroll();
 }
