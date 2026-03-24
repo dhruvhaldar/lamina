@@ -209,6 +209,22 @@ function initKeyboardShortcuts() {
                 setTimeout(() => btn.style.transform = '', 100);
             }
         }
+
+        // Trigger calculation on Enter when focused on an input or select
+        if (!e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey && e.key === 'Enter') {
+            const target = e.target;
+            if (target.tagName === 'INPUT' || target.tagName === 'SELECT') {
+                const btn = document.getElementById('btn-calculate');
+                if (btn && !btn.disabled) {
+                    e.preventDefault();
+                    btn.click();
+
+                    // Visual feedback
+                    btn.style.transform = 'scale(0.98)';
+                    setTimeout(() => btn.style.transform = '', 100);
+                }
+            }
+        }
     });
 }
 

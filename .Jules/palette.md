@@ -89,3 +89,7 @@
 ## 2026-05-15 - Responsive CSS Grid on Mobile Viewports
 **Learning:** Defining grid template columns with fixed pixel minimums using `minmax(Xpx, 1fr)` (e.g. `minmax(400px, 1fr)`) causes elements to overflow their containers on mobile devices with viewport widths smaller than the fixed minimum. This leads to broken layouts and unwanted horizontal scrolling.
 **Action:** Use `minmax(min(100%, Xpx), 1fr)` when configuring responsive grid columns. This allows grid items to gracefully shrink below their target width on small mobile viewports, while maintaining the intended layout on larger screens.
+
+## 2026-06-12 - Implicit Form Submission
+**Learning:** Users instinctively press `Enter` after filling an input field, expecting the primary action (like calculation) to execute. When inputs are not wrapped in a native `<form>` element, this behavior is lost, leading to friction as users are forced to manually click the primary button.
+**Action:** When a `<form>` cannot be used, implement an event listener for `Enter` on `input` and `select` elements to manually trigger the primary action, restoring expected user behavior.
