@@ -57,3 +57,7 @@
 ## 2026-04-01 - Label Pointer Affordance
 **Learning:** Sighted users often don't realize that clicking a text label will focus the associated form input unless there is a visual affordance.
 **Action:** Always add `cursor: pointer` to `<label>` elements to provide immediate visual feedback that they are interactive.
+
+## 2024-05-18 - Added Visual Required Indicators to Form Fields
+**Learning:** Native `required` HTML attributes provide excellent screen reader support, but sighted users lack visual affordance for mandatory fields until submission fails, especially in forms lacking explicit "required" text.
+**Action:** Always pair `required` inputs with a visual indicator (like an asterisk) in the label. Crucially, wrap the visual indicator in `<span aria-hidden="true">*</span>` so screen readers rely solely on the native `required` attribute and don't redundantly announce "star" or "asterisk".
