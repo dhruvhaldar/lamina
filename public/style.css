@@ -329,3 +329,5 @@ input[type="checkbox"], input[type="radio"] {
     cursor: pointer;
     vertical-align: middle;
 }
+
+.required-indicator { color: #e74c3c; }
