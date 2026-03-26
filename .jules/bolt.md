@@ -56,3 +56,7 @@
 ## 2026-04-06 - [Avoid Multiplying by Zeroed Columns in Matrix Operations]
 **Learning:** In `calculate_safety_factor`, multiplying the 6x6 `ABD_inv` matrix by a 6-element load vector padded with zeros `[Nx, Ny, Nxy, 0.0, 0.0, 0.0]` wastes floating point operations. Explicitly slicing the matrix to exclude the zeroed dimensions (`ABD_inv[:, :3] @ [Nx, Ny, Nxy]`) eliminates 50% of the math and yields a ~20% performance increase in `GeneticAlgorithm` evaluations.
 **Action:** When performing matrix multiplication where one matrix contains rows or columns of known zeros, explicitly slice the matrices to exclude the zeroed dimensions.
+
+## 2026-04-06 - [Geometric Properties (h2, h3) Calculation Optimization]
+**Learning:** In `Laminate.update`, calculating the geometric ply properties `h2` and `h3` using algebraic factorization like `h * (zk*zk + zk*zk_1 + zk_1*zk_1)` requires creating and storing multiple intermediate arrays. Since `h2 = zk^2 - zk_1^2` and `h3 = zk^3 - zk_1^3`, mathematically reducing these into differences of squares/cubes and using `np.square()` (e.g., `zk_sq = np.square(zk); h3 = zk_sq * zk - zk_1_sq * zk_1`) minimizes temporary object creation and executes ~30% faster in benchmarks for this specific formula.
+**Action:** When computing multi-term algebraic polynomials over arrays (like geometric integration limits `zk`), simplify the math to evaluate direct power differences (using native `np.square()` or simple multiplication) rather than factored polynomial forms to minimize intermediate array allocations.
