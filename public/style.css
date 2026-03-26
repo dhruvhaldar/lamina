@@ -44,6 +44,9 @@ input:not([type="checkbox"]):not([type="radio"]), select {
     border-radius: 4px;
     transition: border-color 0.2s, box-shadow 0.2s;
 }
+input:not([type="checkbox"]):not([type="radio"]):hover, select:hover {
+    border-color: #a0a0a0;
+}
 button {
     background: #2579b0;
     color: white;
@@ -328,6 +331,14 @@ input[type="checkbox"], input[type="radio"] {
     margin-left: 8px;
     cursor: pointer;
     vertical-align: middle;
+    accent-color: #2579b0;
 }
 
-.required-indicator { color: #e74c3c; }
+.required-indicator { color: #c0392b; }
+
+abbr[title] {
+    cursor: help;
+    text-decoration: underline dotted;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 2px;
+}
