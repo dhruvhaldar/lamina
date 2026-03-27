@@ -93,3 +93,7 @@
 ## 2026-06-12 - Implicit Form Submission
 **Learning:** Users instinctively press `Enter` after filling an input field, expecting the primary action (like calculation) to execute. When inputs are not wrapped in a native `<form>` element, this behavior is lost, leading to friction as users are forced to manually click the primary button.
 **Action:** When a `<form>` cannot be used, implement an event listener for `Enter` on `input` and `select` elements to manually trigger the primary action, restoring expected user behavior.
+
+## 2026-07-15 - Abbreviation Discoverability
+**Learning:** By default, HTML `<abbr title="...">` tags do not change the mouse cursor to a question mark or help pointer on hover in all browsers, making their tooltips difficult for sighted users to discover.
+**Action:** Always apply `cursor: help` and explicit dotted underlines (using `text-decoration` properties) to `<abbr[title]>` elements to ensure their interactive nature is visually apparent.
