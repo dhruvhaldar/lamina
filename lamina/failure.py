@@ -176,12 +176,16 @@ class FailureCriterion:
         X = np.where(s1_all >= 0, Xt, Xc)
         Y = np.where(s2_all >= 0, Yt, Yc)
 
+        # Optimization: Branchless vectorized execution inside np.errstate
+        # avoids explicit boolean array masking and subset assignments.
+        # Direct np.square and pre-computed terms reduce redundant allocations.
         s1_X = s1_all / X
-        term = s1_X * (s1_X - s2_all / X) + np.square(s2_all / Y) + np.square(t12_all / S)
+        s2_Y = s2_all / Y
+        t12_S = t12_all / S
+        term = np.square(s1_X) - s1_X * (s2_all / X) + np.square(s2_Y) + np.square(t12_S)
 
-        f_all = np.full_like(term, np.inf)
-        valid = term > 0
-        f_all[valid] = np.sqrt(1.0/term[valid])
+        with np.errstate(divide='ignore', invalid='ignore'):
+            f_all = np.where(term > 0, np.sqrt(1.0/term), np.inf)
 
         min_factor = np.min(f_all, axis=0)
 
@@ -206,14 +210,12 @@ class FailureCriterion:
         sx_unit, sy_unit, s1_all, s2_all, t12_all = FailureCriterion._get_stresses_vectorized(laminate, angles, h)
 
         with np.errstate(divide='ignore', invalid='ignore'):
-            f_s1 = np.where(s1_all > 0, Xt, -Xc) / s1_all
-            f_s1 = np.where(s1_all == 0, np.inf, f_s1)
-
-            f_s2 = np.where(s2_all > 0, Yt, -Yc) / s2_all
-            f_s2 = np.where(s2_all == 0, np.inf, f_s2)
-
+            # Optimization: Taking the absolute value in the denominator under np.errstate
+            # natively produces np.inf when divided by zero, eliminating the need
+            # for secondary np.where checks to filter out zero-stress points.
+            f_s1 = np.where(s1_all >= 0, Xt, Xc) / np.abs(s1_all)
+            f_s2 = np.where(s2_all >= 0, Yt, Yc) / np.abs(s2_all)
             f_t12 = S / np.abs(t12_all)
-            f_t12 = np.where(t12_all == 0, np.inf, f_t12)
 
         f_all = np.minimum(f_s1, np.minimum(f_s2, f_t12))
         min_factor = np.min(f_all, axis=0)
