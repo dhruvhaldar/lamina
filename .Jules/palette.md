@@ -97,3 +97,7 @@
 ## 2026-07-15 - Abbreviation Discoverability
 **Learning:** By default, HTML `<abbr title="...">` tags do not change the mouse cursor to a question mark or help pointer on hover in all browsers, making their tooltips difficult for sighted users to discover.
 **Action:** Always apply `cursor: help` and explicit dotted underlines (using `text-decoration` properties) to `<abbr[title]>` elements to ensure their interactive nature is visually apparent.
+
+## 2026-03-28 - Visual Hierarchy for Action Buttons
+**Learning:** Presenting multiple action buttons with identical primary visual weight (e.g., solid brand color backgrounds) creates cognitive load and fails to guide the user toward the primary intended action.
+**Action:** Always establish a clear visual hierarchy by reserving solid/heavy styles for the primary action and using outlined or subtle background styles for secondary or alternative actions.
