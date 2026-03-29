@@ -5,11 +5,30 @@ function showToast(message, type = 'info') {
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
     toast.role = type === 'error' ? 'alert' : 'status';
-    toast.textContent = message;
 
+    // Create text node safely
+    const textNode = document.createElement('span');
+    textNode.textContent = message;
+    toast.appendChild(textNode);
+
+    // Reuse secondary button styling without adding new CSS
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'btn-secondary';
+    closeBtn.style.padding = '4px 8px';
+    closeBtn.style.marginLeft = '15px';
+    closeBtn.style.fontSize = '12px';
+    closeBtn.setAttribute('aria-label', 'Close notification');
+    closeBtn.textContent = 'Dismiss';
+
+    closeBtn.addEventListener('click', () => {
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 300);
+    });
+
+    toast.appendChild(closeBtn);
     container.appendChild(toast);
 
-    // Remove after 5 seconds
+    // Remove after 5 seconds (standard timeout, simplest accessible mitigation without complex state)
     setTimeout(() => {
         toast.style.opacity = '0';
         setTimeout(() => toast.remove(), 300);
