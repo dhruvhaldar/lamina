@@ -101,3 +101,7 @@
 ## 2026-03-28 - Visual Hierarchy for Action Buttons
 **Learning:** Presenting multiple action buttons with identical primary visual weight (e.g., solid brand color backgrounds) creates cognitive load and fails to guide the user toward the primary intended action.
 **Action:** Always establish a clear visual hierarchy by reserving solid/heavy styles for the primary action and using outlined or subtle background styles for secondary or alternative actions.
+
+## 2026-08-01 - Accessible Ephemeral Notifications
+**Learning:** Automatically disappearing toast notifications violate WCAG "Timing Adjustable" constraints if users (especially those using screen readers or with cognitive disabilities) cannot pause the timer to read the content or manually dismiss it.
+**Action:** Always include an interactive, accessible dismiss button (`aria-label`) on toast notifications to give users explicit control over dismissing the alert.
