@@ -200,7 +200,7 @@ function initKeyboardShortcuts() {
         // Trigger calculation on Ctrl+Enter (or Cmd+Enter on Mac)
         if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
             const btn = document.getElementById('btn-calculate');
-            if (btn && !btn.disabled) {
+            if (btn && !btn.disabled && btn.getAttribute('aria-disabled') !== 'true') {
                 e.preventDefault();
                 btn.click();
 
@@ -215,7 +215,7 @@ function initKeyboardShortcuts() {
             const target = e.target;
             if (target.tagName === 'INPUT' || target.tagName === 'SELECT') {
                 const btn = document.getElementById('btn-calculate');
-                if (btn && !btn.disabled) {
+                if (btn && !btn.disabled && btn.getAttribute('aria-disabled') !== 'true') {
                     e.preventDefault();
                     btn.click();
 
