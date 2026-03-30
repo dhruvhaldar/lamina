@@ -132,7 +132,8 @@ class FailureCriterion:
 
         sx_unit, sy_unit, s1_all, s2_all, t12_all = FailureCriterion._get_stresses_vectorized(laminate, angles, h)
 
-        A = F11*s1_all**2 + F22*s2_all**2 + F66*t12_all**2 + 2*F12*s1_all*s2_all
+        # Optimization: use np.square() to bypass the operator overhead of **2
+        A = F11*np.square(s1_all) + F22*np.square(s2_all) + F66*np.square(t12_all) + 2*F12*s1_all*s2_all
         B = F1*s1_all + F2*s2_all
 
         delta = np.square(B) + 4 * A
