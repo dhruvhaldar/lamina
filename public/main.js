@@ -37,12 +37,12 @@ function showToast(message, type = 'info') {
 
 function setLoading(btn, isLoading) {
     if (isLoading) {
-        btn.setAttribute('disabled', 'true');
+        btn.setAttribute('aria-disabled', 'true');
         btn.setAttribute('aria-busy', 'true');
         btn.dataset.originalHtml = btn.innerHTML;
         btn.innerHTML = '<span class="spinner" aria-hidden="true"></span> Processing...';
     } else {
-        btn.removeAttribute('disabled');
+        btn.removeAttribute('aria-disabled');
         btn.setAttribute('aria-busy', 'false');
         btn.innerHTML = btn.dataset.originalHtml;
     }
@@ -187,6 +187,7 @@ function validateInputs() {
 }
 
 async function calculate(btn) {
+    if (btn.getAttribute('aria-disabled') === 'true') return;
     if (!validateInputs()) return;
     setLoading(btn, true);
     try {
@@ -232,6 +233,7 @@ async function calculate(btn) {
 }
 
 async function plotPolar(btn) {
+    if (btn.getAttribute('aria-disabled') === 'true') return;
     if (!validateInputs()) return;
     setLoading(btn, true);
     try {
@@ -264,6 +266,7 @@ async function plotPolar(btn) {
 }
 
 async function plotEnvelope(btn) {
+    if (btn.getAttribute('aria-disabled') === 'true') return;
     if (!validateInputs()) return;
     setLoading(btn, true);
     try {

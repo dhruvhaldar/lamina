@@ -109,3 +109,7 @@
 ## 2026-08-05 - Skip-to-Content Link for Keyboard Navigation
 **Learning:** Users relying heavily on keyboard navigation are forced to tab through all header/navigation links repeatedly on every page load unless a bypass mechanism is provided.
 **Action:** Always include a visually hidden but focusable `<a class="skip-link" href="#main-content">Skip to main content</a>` at the top of the body that points to a `tabindex="-1"` element like `<main id="main-content">` to allow users to bypass repetitive content. Remove the default focus outline from `#main-content` to avoid an unpleasant visual state when focused programmatically.
+
+## 2026-03-30 - Focus Management During Async Loading
+**Learning:** Setting the native `disabled` attribute on an element (like a submit button) while it performs an async action immediately removes it from the document's tab order and forces it to lose focus. For keyboard and screen reader users, this is highly disorienting because their focus is reset to the top of the `<body>`, forcing them to navigate through the entire page again to see the results.
+**Action:** Use `aria-disabled="true"` instead of `disabled` during async states to visually and semantically communicate the disabled state without stealing keyboard focus. Remember to manually block `click` and `keydown` events when `aria-disabled="true"` is set.
