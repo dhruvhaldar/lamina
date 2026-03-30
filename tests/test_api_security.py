@@ -28,6 +28,8 @@ def test_security_headers_root():
     # Ensure unsafe-inline is NOT in script-src
     script_src = [p for p in csp.split(';') if 'script-src' in p][0]
     assert "'unsafe-inline'" not in script_src
+    assert "form-action 'self'" in csp
+    assert "upgrade-insecure-requests" in csp
 
     assert "Referrer-Policy" in headers
     assert headers["Referrer-Policy"] == "strict-origin-when-cross-origin"
@@ -73,6 +75,8 @@ def test_security_headers_calculate():
     # Ensure unsafe-inline is NOT in script-src
     script_src = [p for p in csp.split(';') if 'script-src' in p][0]
     assert "'unsafe-inline'" not in script_src
+    assert "form-action 'self'" in csp
+    assert "upgrade-insecure-requests" in csp
 
     assert "Cache-Control" in headers
     assert headers["Cache-Control"] == "no-store, no-cache, must-revalidate, max-age=0"
