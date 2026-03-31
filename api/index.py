@@ -12,7 +12,8 @@ from lamina.clt import Laminate
 from lamina.failure import FailureCriterion
 from api.middleware import SecurityHeadersMiddleware, RateLimitMiddleware, PayloadSizeLimitMiddleware
 
-app = FastAPI()
+# Disable API documentation endpoints to prevent information disclosure
+app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
 # Add global 1MB payload size limit middleware
 app.add_middleware(PayloadSizeLimitMiddleware, limit=1048576)
 app.add_middleware(RateLimitMiddleware, limit=100, window=60)
