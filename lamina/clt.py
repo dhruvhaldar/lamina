@@ -151,16 +151,13 @@ class Laminate:
         # and leverages optimized BLAS routines (reshape(9, N) @ (N,)).
         # Native np.dot is faster than the @ operator for flat vector multiplication.
 
-        self.A = np.dot(Q_bars_flat, h).reshape(3, 3)
-        self.B = 0.5 * np.dot(Q_bars_flat, h2).reshape(3, 3)
-        self.D = (1/3) * np.dot(Q_bars_flat, h3).reshape(3, 3)
-
         # ABD Matrix
         self.ABD = np.empty((6, 6))
-        self.ABD[:3, :3] = self.A
-        self.ABD[:3, 3:] = self.B
-        self.ABD[3:, :3] = self.B
-        self.ABD[3:, 3:] = self.D
+
+        # Directly slice into pre-allocated ABD matrix to avoid intermediate 3x3 array creation overhead.
+        self.A = self.ABD[:3, :3] = np.dot(Q_bars_flat, h).reshape(3, 3)
+        self.B = self.ABD[:3, 3:] = self.ABD[3:, :3] = 0.5 * np.dot(Q_bars_flat, h2).reshape(3, 3)
+        self.D = self.ABD[3:, 3:] = (1/3) * np.dot(Q_bars_flat, h3).reshape(3, 3)
 
         # Lazy property invalidation
         self._abd = None

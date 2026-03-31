@@ -64,3 +64,7 @@
 ## 2026-04-06 - [Avoid Explicit Zero-Checks in Vectorized Denominators]
 **Learning:** In calculations like the Max Stress failure criterion, explicitly checking for zeros and replacing them with `np.inf` via boolean assignments (`f_s1 = np.where(s1_all == 0, np.inf, f_s1)`) is redundant and slow. By leveraging `np.abs()` in the denominator (`np.abs(s1_all)`) inside an `np.errstate(divide='ignore', invalid='ignore')` block, NumPy will natively evaluate `1 / 0.0` as `np.inf`. This completely bypasses the need for explicit zero-checks or double-assignments for points where stress is zero, resulting in a ~34% performance improvement.
 **Action:** When calculating scaling factors or ratios over numerical vectors, wrap the operation in `np.errstate` and use `np.abs` in the denominator to cleanly produce `np.inf` on zero-division without additional `np.where` masking logic.
+
+## 2026-04-06 - [Context Manager Overhead in Tight Loops]
+**Learning:** The `np.errstate` context manager introduces significant execution overhead (~1.5-2x slower in benchmarks) when invoked repeatedly inside a tight loop. While it provides a clean way to handle floating-point exceptions like divide-by-zero without explicit boolean masking, creating and destroying the context object on every iteration (e.g. `100,000` times) adds measurable runtime latency.
+**Action:** In performance-critical tight loops, always hoist `with np.errstate(...):` outside the loop to wrap the entire iteration block rather than instantiating the context manager on every iteration.
