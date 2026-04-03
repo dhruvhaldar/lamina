@@ -113,3 +113,7 @@
 ## 2026-03-30 - Focus Management During Async Loading
 **Learning:** Setting the native `disabled` attribute on an element (like a submit button) while it performs an async action immediately removes it from the document's tab order and forces it to lose focus. For keyboard and screen reader users, this is highly disorienting because their focus is reset to the top of the `<body>`, forcing them to navigate through the entire page again to see the results.
 **Action:** Use `aria-disabled="true"` instead of `disabled` during async states to visually and semantically communicate the disabled state without stealing keyboard focus. Remember to manually block `click` and `keydown` events when `aria-disabled="true"` is set.
+
+## 2026-04-03 - Accessible Ephemeral Notifications Revision
+**Learning:** Even with an accessible manual dismiss button, automatically disappearing toast notifications still violate WCAG "Timing Adjustable" constraints if users (especially those using screen readers or with cognitive disabilities) cannot read the content before it disappears.
+**Action:** Never use auto-dismiss timeouts (`setTimeout`) for toast notifications. Always rely exclusively on manual dismissal.

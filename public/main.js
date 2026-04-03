@@ -27,12 +27,6 @@ function showToast(message, type = 'info') {
 
     toast.appendChild(closeBtn);
     container.appendChild(toast);
-
-    // Remove after 5 seconds (standard timeout, simplest accessible mitigation without complex state)
-    setTimeout(() => {
-        toast.style.opacity = '0';
-        setTimeout(() => toast.remove(), 300);
-    }, 5000);
 }
 
 function setLoading(btn, isLoading) {
