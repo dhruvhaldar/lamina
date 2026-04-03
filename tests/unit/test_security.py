@@ -12,12 +12,23 @@ def test_path_traversal_blocked():
     filename = "../requirements.txt"
 
     # Call the function directly to bypass any router/middleware checks
-    # Expect 403 Forbidden
+    # Expect 400 Bad Request because of explicit traversal character rejection
     with pytest.raises(HTTPException) as excinfo:
         read_file(filename)
 
-    assert excinfo.value.status_code == 403
-    assert excinfo.value.detail == "Access denied"
+    assert excinfo.value.status_code == 400
+    assert excinfo.value.detail == "Invalid filename"
+
+def test_directory_traversal_chars_rejected():
+    """
+    Test that directory traversal characters are explicitly rejected.
+    """
+    for filename in ["index.html/..", "index\\html", "/etc/passwd", "C:\\Windows\\System32"]:
+        with pytest.raises(HTTPException) as excinfo:
+            read_file(filename)
+
+        assert excinfo.value.status_code == 400
+        assert excinfo.value.detail == "Invalid filename"
 
 def test_symlink_traversal_blocked():
     """
