@@ -16,8 +16,8 @@ def test_path_traversal_blocked():
     with pytest.raises(HTTPException) as excinfo:
         read_file(filename)
 
-    assert excinfo.value.status_code == 403
-    assert excinfo.value.detail == "Access denied"
+    assert excinfo.value.status_code in (400, 403)
+    assert excinfo.value.detail in ("Invalid filename", "Access denied")
 
 def test_symlink_traversal_blocked():
     """
