@@ -12,12 +12,12 @@ def test_path_traversal_blocked():
     filename = "../requirements.txt"
 
     # Call the function directly to bypass any router/middleware checks
-    # Expect 403 Forbidden
+    # Expect 400 Bad Request
     with pytest.raises(HTTPException) as excinfo:
         read_file(filename)
 
-    assert excinfo.value.status_code == 403
-    assert excinfo.value.detail == "Access denied"
+    assert excinfo.value.status_code == 400
+    assert excinfo.value.detail == "Invalid filename"
 
 def test_symlink_traversal_blocked():
     """
@@ -78,6 +78,17 @@ def test_null_byte_injection():
 
     assert excinfo.value.status_code == 400
     assert excinfo.value.detail == "Invalid filename"
+
+def test_directory_traversal_characters_blocked():
+    """
+    Test that directory traversal characters are blocked at the API boundary.
+    """
+    for filename in ["index.html/../", "index.html\\..\\", "../requirements.txt"]:
+        with pytest.raises(HTTPException) as excinfo:
+            read_file(filename)
+
+        assert excinfo.value.status_code == 400
+        assert excinfo.value.detail == "Invalid filename"
 
 def test_blocked_file_extension():
     """

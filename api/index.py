@@ -198,7 +198,7 @@ ALLOWED_EXTENSIONS = {'.html', '.css', '.js', '.json', '.png', '.jpg', '.jpeg', 
 
 @app.get("/{filename}")
 def read_file(filename: str = Path(..., max_length=255)):
-    if '\x00' in filename:
+    if '\x00' in filename or '/' in filename or '\\' in filename:
         raise HTTPException(status_code=400, detail="Invalid filename")
 
     base_dir = os.path.realpath("public")
