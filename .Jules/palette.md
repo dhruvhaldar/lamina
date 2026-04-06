@@ -104,7 +104,7 @@
 
 ## 2026-08-01 - Accessible Ephemeral Notifications
 **Learning:** Automatically disappearing toast notifications violate WCAG "Timing Adjustable" constraints if users (especially those using screen readers or with cognitive disabilities) cannot pause the timer to read the content or manually dismiss it.
-**Action:** Always include an interactive, accessible dismiss button (`aria-label`) on toast notifications to give users explicit control over dismissing the alert.
+**Action:** Always include an interactive, accessible dismiss button (`aria-label`) on toast notifications to give users explicit control over dismissing the alert. Additionally, never use auto-dismiss timeouts for toast notifications; always rely on manual dismissal to ensure compliance.
 
 ## 2026-08-05 - Skip-to-Content Link for Keyboard Navigation
 **Learning:** Users relying heavily on keyboard navigation are forced to tab through all header/navigation links repeatedly on every page load unless a bypass mechanism is provided.
