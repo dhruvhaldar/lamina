@@ -117,3 +117,7 @@
 ## 2026-04-03 - Accessible Ephemeral Notifications Revision
 **Learning:** Even with an accessible manual dismiss button, automatically disappearing toast notifications still violate WCAG "Timing Adjustable" constraints if users (especially those using screen readers or with cognitive disabilities) cannot read the content before it disappears.
 **Action:** Never use auto-dismiss timeouts (`setTimeout`) for toast notifications. Always rely exclusively on manual dismissal.
+
+## 2026-04-10 - Elevating Custom Validation to Native UI
+**Learning:** Custom Javascript validation using purely visual cues and ARIA attributes (like `aria-invalid`) fails to provide the localized popup tooltip feedback that native HTML5 validation offers (e.g. `reportValidity()`). If a custom validation fails, users don't see the specific error attached to the input natively, forcing a reliance on fallback methods like `.focus()`.
+**Action:** Use `input.setCustomValidity(message)` when a custom Javascript validation fails (e.g. empty sequence, specific numeric constraint) and `input.setCustomValidity('')` when it passes. This bridges the gap, allowing `reportValidity()` to natively render accessible, localized error tooltips containing your specific error message instead of generic messages or silent focusing.

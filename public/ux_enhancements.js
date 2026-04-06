@@ -73,6 +73,7 @@ function initStackPreview() {
             preview.textContent = 'Stack cannot be empty';
             preview.style.color = '#c0392b';
             stackInput.setAttribute('aria-invalid', 'true');
+            stackInput.setCustomValidity('Stack cannot be empty');
             return;
         }
 
@@ -82,6 +83,7 @@ function initStackPreview() {
                 preview.textContent = `Invalid angle: "${ply}"`;
                 preview.style.color = '#c0392b'; // Error red
                 stackInput.setAttribute('aria-invalid', 'true');
+                stackInput.setCustomValidity(`Invalid angle: "${ply}"`);
                 return;
             }
         }
@@ -115,6 +117,7 @@ function initStackPreview() {
         preview.appendChild(thicknessHint);
         preview.style.color = '';
         stackInput.removeAttribute('aria-invalid');
+        stackInput.setCustomValidity('');
     };
 
     stackInput.addEventListener('input', update);
@@ -152,10 +155,12 @@ function initInputPreviews() {
                 preview.textContent = 'Invalid number';
                 preview.style.color = '#c0392b';
                 input.setAttribute('aria-invalid', 'true');
+                input.setCustomValidity('Invalid number');
             } else if (val <= 0 && input.id !== 'v12') {
                 preview.textContent = 'Must be > 0';
                 preview.style.color = '#c0392b';
                 input.setAttribute('aria-invalid', 'true');
+                input.setCustomValidity('Must be > 0');
             } else {
                 if (input.id === 'v12') {
                     preview.textContent = input.value;
@@ -164,6 +169,7 @@ function initInputPreviews() {
                 }
                 preview.style.color = '';
                 input.removeAttribute('aria-invalid');
+                input.setCustomValidity('');
             }
         };
 
