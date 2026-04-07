@@ -121,3 +121,7 @@
 ## 2026-04-10 - Elevating Custom Validation to Native UI
 **Learning:** Custom Javascript validation using purely visual cues and ARIA attributes (like `aria-invalid`) fails to provide the localized popup tooltip feedback that native HTML5 validation offers (e.g. `reportValidity()`). If a custom validation fails, users don't see the specific error attached to the input natively, forcing a reliance on fallback methods like `.focus()`.
 **Action:** Use `input.setCustomValidity(message)` when a custom Javascript validation fails (e.g. empty sequence, specific numeric constraint) and `input.setCustomValidity('')` when it passes. This bridges the gap, allowing `reportValidity()` to natively render accessible, localized error tooltips containing your specific error message instead of generic messages or silent focusing.
+
+## 2026-08-10 - Hiding Spin Buttons on Engineering Numeric Inputs
+**Learning:** Native browser spin buttons (up/down arrows) on `<input type="number">` are detrimental in engineering applications dealing with large scientific notation values (e.g., `140e9`). Clicking these arrows increments/decrements the value by 1 (e.g., `140000000001`), which is mathematically negligible, clutters the UI, and can confuse users.
+**Action:** Always hide the native spin buttons using `::-webkit-inner-spin-button`, `::-webkit-outer-spin-button`, and `-moz-appearance: textfield` via CSS for number inputs in engineering/scientific contexts.

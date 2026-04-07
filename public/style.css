@@ -369,6 +369,17 @@ input[type="checkbox"], input[type="radio"] {
     accent-color: #2579b0;
 }
 
+/* Hide number input spin buttons */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input[type="number"] {
+    -moz-appearance: textfield;
+}
+
 .required-indicator { color: #c0392b; }
 
 abbr[title] {
