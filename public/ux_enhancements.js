@@ -304,6 +304,15 @@ function initPreventNumberInputScroll() {
             document.activeElement.blur();
         }
     }, { passive: true });
+
+    // Prevent accidental value changes when using up/down arrow keys on number inputs
+    document.addEventListener('keydown', (e) => {
+        if (document.activeElement && document.activeElement.type === 'number') {
+            if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                e.preventDefault();
+            }
+        }
+    });
 }
 
 // Initialize when DOM is ready

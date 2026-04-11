@@ -125,3 +125,7 @@
 ## 2026-08-10 - Hiding Spin Buttons on Engineering Numeric Inputs
 **Learning:** Native browser spin buttons (up/down arrows) on `<input type="number">` are detrimental in engineering applications dealing with large scientific notation values (e.g., `140e9`). Clicking these arrows increments/decrements the value by 1 (e.g., `140000000001`), which is mathematically negligible, clutters the UI, and can confuse users.
 **Action:** Always hide the native spin buttons using `::-webkit-inner-spin-button`, `::-webkit-outer-spin-button`, and `-moz-appearance: textfield` via CSS for number inputs in engineering/scientific contexts.
+
+## 2026-08-11 - Disabling Arrow Keys on Engineering Numeric Inputs
+**Learning:** Even with spin buttons hidden, pressing `ArrowUp` or `ArrowDown` while a `<input type="number">` is focused still alters the value. In engineering applications dealing with large scientific notation values, this leads to negligible changes (e.g., incrementing `140e9` by 1) that corrupt data without obvious visual indication.
+**Action:** Always add a global `keydown` event listener that intercepts `ArrowUp` and `ArrowDown` on focused number inputs and calls `e.preventDefault()` to avoid accidental data manipulation.
