@@ -88,23 +88,16 @@ class LaminateModel(BaseModel):
     symmetry: bool = False
     thickness: float = 0.125e-3
 
-    @field_validator('stack', mode='before')
+    @field_validator('stack', mode='after')
     @classmethod
-    def check_stack_size(cls, v: Any) -> Any:
-        if isinstance(v, list):
-            if len(v) > 200:
-                 raise ValueError('Stack too large (max 200 plies)')
-            if len(v) == 0:
-                 raise ValueError('Stack cannot be empty')
-            for val in v:
-                 try:
-                     fval = float(val)
-                     if math.isnan(fval) or math.isinf(fval):
-                          raise ValueError('Must be a finite number')
-                 except (TypeError, ValueError) as e:
-                     if 'Must be a finite number' in str(e):
-                         raise
-                     pass
+    def check_stack_size(cls, v: List[float]) -> List[float]:
+        if len(v) > 200:
+             raise ValueError('Stack too large (max 200 plies)')
+        if len(v) == 0:
+             raise ValueError('Stack cannot be empty')
+        for val in v:
+             if math.isnan(val) or math.isinf(val):
+                  raise ValueError('Must be a finite number')
         return v
 
     @field_validator('thickness', mode='before')
