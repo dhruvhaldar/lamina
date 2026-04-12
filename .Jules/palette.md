@@ -129,3 +129,7 @@
 ## 2026-08-11 - Disabling Arrow Keys on Engineering Numeric Inputs
 **Learning:** Even with spin buttons hidden, pressing `ArrowUp` or `ArrowDown` while a `<input type="number">` is focused still alters the value. In engineering applications dealing with large scientific notation values, this leads to negligible changes (e.g., incrementing `140e9` by 1) that corrupt data without obvious visual indication.
 **Action:** Always add a global `keydown` event listener that intercepts `ArrowUp` and `ArrowDown` on focused number inputs and calls `e.preventDefault()` to avoid accidental data manipulation.
+
+## 2026-08-16 - Label in Name SC 2.5.3 Violation
+**Learning:** When using `aria-label` to provide an accessible name for a button, it is a WCAG 2.1 SC 2.5.3 (Label in Name) violation if the accessible name does not contain the visible text of the element. If a button's visible text is "Dismiss" but the `aria-label` is "Close notification", voice dictation users will fail to activate the button when they say "Click Dismiss".
+**Action:** Always ensure the `aria-label` string contains the exact visible text of the element (e.g. `aria-label="Dismiss notification"` for visible text "Dismiss") to ensure proper functionality for speech recognition software.

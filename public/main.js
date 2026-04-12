@@ -17,7 +17,7 @@ function showToast(message, type = 'info') {
     closeBtn.style.padding = '4px 8px';
     closeBtn.style.marginLeft = '15px';
     closeBtn.style.fontSize = '12px';
-    closeBtn.setAttribute('aria-label', 'Close notification');
+    closeBtn.setAttribute('aria-label', 'Dismiss notification');
     closeBtn.textContent = 'Dismiss';
 
     closeBtn.addEventListener('click', () => {
