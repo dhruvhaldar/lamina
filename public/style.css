@@ -58,10 +58,10 @@ button {
     margin-right: 10px;
     transition: background-color 0.2s, transform 0.1s;
 }
-button:hover {
+button:not(:disabled):not([aria-disabled="true"]):hover {
     background: #1f6595;
 }
-button:active {
+button:not(:disabled):not([aria-disabled="true"]):active {
     transform: scale(0.98);
 }
 
@@ -71,7 +71,7 @@ button.btn-secondary {
     border: 2px solid #2579b0;
     padding: 8px 18px; /* account for 2px border to match 10px 20px of primary */
 }
-button.btn-secondary:hover {
+button.btn-secondary:not(:disabled):not([aria-disabled="true"]):hover {
     background: #e8f4fc;
 }
 .results {
