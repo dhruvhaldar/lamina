@@ -133,3 +133,7 @@
 ## 2026-08-16 - Label in Name SC 2.5.3 Violation
 **Learning:** When using `aria-label` to provide an accessible name for a button, it is a WCAG 2.1 SC 2.5.3 (Label in Name) violation if the accessible name does not contain the visible text of the element. If a button's visible text is "Dismiss" but the `aria-label` is "Close notification", voice dictation users will fail to activate the button when they say "Click Dismiss".
 **Action:** Always ensure the `aria-label` string contains the exact visible text of the element (e.g. `aria-label="Dismiss notification"` for visible text "Dismiss") to ensure proper functionality for speech recognition software.
+
+## 2026-08-18 - Hiding Decorative CSS-Transformed Elements in Visual Badges
+**Learning:** When using CSS-transformed span elements (e.g., rotated lines) to create visual icons within badges or labels, screen readers may still try to interpret the empty spans if they aren't explicitly hidden, creating unnecessary noise.
+**Action:** Always add `aria-hidden="true"` to purely visual/decorative HTML elements, especially empty spans used for CSS shapes, so they don't pollute the accessibility tree and distract from the actual textual content (e.g., "45°") accompanying the visual indicator.
