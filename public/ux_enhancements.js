@@ -100,6 +100,7 @@ function initStackPreview() {
             const icon = document.createElement('span');
             icon.className = 'ply-icon';
             icon.setAttribute('data-angle', angle);
+            icon.setAttribute('aria-hidden', 'true');
             icon.style.transform = `rotate(-${angle}deg)`;
 
             badge.appendChild(icon);
