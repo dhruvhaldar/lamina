@@ -61,3 +61,7 @@
 ## 2024-05-18 - Added Visual Required Indicators to Form Fields
 **Learning:** Native `required` HTML attributes provide excellent screen reader support, but sighted users lack visual affordance for mandatory fields until submission fails, especially in forms lacking explicit "required" text.
 **Action:** Always pair `required` inputs with a visual indicator (like an asterisk) in the label. Crucially, wrap the visual indicator in `<span aria-hidden="true">*</span>` so screen readers rely solely on the native `required` attribute and don't redundantly announce "star" or "asterisk".
+
+## 2026-04-15 - Disabled Button Hover Affordances
+**Learning:** Applying interactive `:hover` and `:active` CSS styles (like background color changes or scale transforms) to disabled buttons creates conflicting visual feedback, confusing users into thinking the element is interactive when it isn't.
+**Action:** Always restrict interactive pseudo-classes on buttons using `:not(:disabled):not([aria-disabled="true"])` to ensure disabled states remain visually static.
