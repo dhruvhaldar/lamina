@@ -137,3 +137,7 @@
 ## 2026-08-18 - Hiding Decorative CSS-Transformed Elements in Visual Badges
 **Learning:** When using CSS-transformed span elements (e.g., rotated lines) to create visual icons within badges or labels, screen readers may still try to interpret the empty spans if they aren't explicitly hidden, creating unnecessary noise.
 **Action:** Always add `aria-hidden="true"` to purely visual/decorative HTML elements, especially empty spans used for CSS shapes, so they don't pollute the accessibility tree and distract from the actual textual content (e.g., "45°") accompanying the visual indicator.
+
+## 2026-04-18 - Keyboard Dismissal for Persistent Notifications
+**Learning:** Persistent toast notifications that lack auto-dismissal (necessary for WCAG compliance) can quickly stack up and obscure UI content. For keyboard-only users, navigating to the end of the DOM to manually dismiss multiple toasts creates extreme friction and disrupts their workflow.
+**Action:** Always provide a global `Escape` key listener to dismiss the most recent persistent notification. Pair this behavior with `aria-keyshortcuts="Escape"` and a visual `title` hint on the dismiss button so users can quickly clear the screen without losing focus on their current task.

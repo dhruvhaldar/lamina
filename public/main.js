@@ -18,12 +18,27 @@ function showToast(message, type = 'info') {
     closeBtn.style.marginLeft = '15px';
     closeBtn.style.fontSize = '12px';
     closeBtn.setAttribute('aria-label', 'Dismiss notification');
+    closeBtn.setAttribute('aria-keyshortcuts', 'Escape');
+    closeBtn.title = 'Press Escape to dismiss';
     closeBtn.textContent = 'Dismiss';
 
-    closeBtn.addEventListener('click', () => {
+    const closeToast = () => {
         toast.style.opacity = '0';
+        document.removeEventListener('keydown', handleEscape);
         setTimeout(() => toast.remove(), 300);
-    });
+    };
+
+    const handleEscape = (e) => {
+        if (e.key === 'Escape') {
+            // Only dismiss if this is the most recently added toast and it's not already fading
+            if (container.lastElementChild === toast && toast.style.opacity !== '0') {
+                closeToast();
+            }
+        }
+    };
+
+    closeBtn.addEventListener('click', closeToast);
+    document.addEventListener('keydown', handleEscape);
 
     toast.appendChild(closeBtn);
     container.appendChild(toast);
