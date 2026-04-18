@@ -18,6 +18,8 @@ function showToast(message, type = 'info') {
     closeBtn.style.marginLeft = '15px';
     closeBtn.style.fontSize = '12px';
     closeBtn.setAttribute('aria-label', 'Dismiss notification');
+    closeBtn.setAttribute('aria-keyshortcuts', 'Escape');
+    closeBtn.title = 'Dismiss (Escape)';
     closeBtn.textContent = 'Dismiss';
 
     closeBtn.addEventListener('click', () => {
@@ -295,6 +297,18 @@ async function plotEnvelope(btn) {
 
 // Initialization and Event Listeners
 document.addEventListener('DOMContentLoaded', () => {
+    // Add global Escape key listener to dismiss the most recent toast
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            const toasts = document.querySelectorAll('#toast-container .toast');
+            if (toasts.length > 0) {
+                const mostRecentToast = toasts[toasts.length - 1];
+                const dismissBtn = mostRecentToast.querySelector('button');
+                if (dismissBtn) dismissBtn.click();
+            }
+        }
+    });
+
     // Attach listeners to buttons
     const btnCalculate = document.getElementById('btn-calculate');
     if (btnCalculate) {
