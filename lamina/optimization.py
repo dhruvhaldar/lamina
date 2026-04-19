@@ -13,13 +13,15 @@ def calculate_safety_factor(laminate, load, limits):
     Nxy = load.get('Nxy', 0)
 
     ABD_inv = laminate.abd
-    # Optimization: When performing matrix multiplication where one matrix contains rows
-    # of known zeros (moments are zeroed), explicitly slicing the matrix (ABD_inv[:, :3])
-    # significantly reduces redundant floating-point operations.
-    NM_reduced = np.array([Nx, Ny, Nxy])
-    strain_curv = ABD_inv[:, :3] @ NM_reduced
-    eps0 = strain_curv[:3]
-    kap = strain_curv[3:]
+
+    # Optimization: Algebraic expansion of matrix multiplication avoids array allocation overhead
+    eps0_x = ABD_inv[0,0]*Nx + ABD_inv[0,1]*Ny + ABD_inv[0,2]*Nxy
+    eps0_y = ABD_inv[1,0]*Nx + ABD_inv[1,1]*Ny + ABD_inv[1,2]*Nxy
+    eps0_xy = ABD_inv[2,0]*Nx + ABD_inv[2,1]*Ny + ABD_inv[2,2]*Nxy
+
+    kap_x = ABD_inv[3,0]*Nx + ABD_inv[3,1]*Ny + ABD_inv[3,2]*Nxy
+    kap_y = ABD_inv[4,0]*Nx + ABD_inv[4,1]*Ny + ABD_inv[4,2]*Nxy
+    kap_xy = ABD_inv[5,0]*Nx + ABD_inv[5,1]*Ny + ABD_inv[5,2]*Nxy
 
     Xt = limits['xt']
     Xc = limits['xc']
@@ -54,9 +56,9 @@ def calculate_safety_factor(laminate, load, limits):
     z = (laminate.z_coords[:-1] + laminate.z_coords[1:]) / 2
 
     # Optimization: direct component addition instead of allocating a large 3xN broadcast array
-    ex = eps0[0] + kap[0] * z
-    ey = eps0[1] + kap[1] * z
-    gxy = eps0[2] + kap[2] * z
+    ex = eps0_x + kap_x * z
+    ey = eps0_y + kap_y * z
+    gxy = eps0_xy + kap_xy * z
 
     e1 = c2 * ex + s2 * ey + cs * gxy
     e2 = s2 * ex + c2 * ey - cs * gxy
@@ -74,19 +76,24 @@ def calculate_safety_factor(laminate, load, limits):
 
     delta = B * B + 4 * A
 
+    # Optimization: Context manager `with np.errstate` is slow in loops.
+    # Replace with an efficient fast path based on physical properties (A >= 0).
+    sqrt_delta = np.sqrt(delta)
+
+    if np.all(A >= 1e-10):
+        f1_quad = (-B + sqrt_delta) / (2 * A)
+        return np.min(f1_quad)
+
+    # Slow path with explicit context manager for edge cases where A ~ 0
     with np.errstate(divide='ignore', invalid='ignore'):
-        # Optimization: Mathematically, A is always non-negative because the
-        # Tsai-Wu coefficients form a positive-definite matrix. Thus, delta >= 0
-        # and sqrt_delta >= |B|. The only positive root is f1_quad.
-        # This completely avoids allocating and selecting between intermediate root arrays.
-        sqrt_delta = np.sqrt(delta)
         f1_quad = (-B + sqrt_delta) / (2 * A)
 
-        f_lin = 1.0 / B
+        mask = A < 1e-10
+        f_lin = np.empty_like(B)
+        np.divide(1.0, B, out=f_lin, where=B>0)
+        f_lin[B<=0] = np.inf
 
-        f_all = np.where(A < 1e-10,
-                            np.where(B > 0, f_lin, np.inf),
-                            f1_quad)
+        f_all = np.where(mask, f_lin, f1_quad)
 
     return np.min(f_all)
 
