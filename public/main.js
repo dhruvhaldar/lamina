@@ -18,6 +18,8 @@ function showToast(message, type = 'info') {
     closeBtn.style.marginLeft = '15px';
     closeBtn.style.fontSize = '12px';
     closeBtn.setAttribute('aria-label', 'Dismiss notification');
+    closeBtn.setAttribute('aria-keyshortcuts', 'Escape');
+    closeBtn.setAttribute('title', 'Dismiss (Escape)');
     closeBtn.textContent = 'Dismiss';
 
     closeBtn.addEventListener('click', () => {
@@ -316,6 +318,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const btn = e.target.closest('.copy-btn');
         if (btn) {
             copyToClipboard(btn);
+        }
+    });
+
+    // Global listener to dismiss toasts with Escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            const container = document.getElementById('toast-container');
+            if (container && container.lastElementChild) {
+                const dismissBtn = container.lastElementChild.querySelector('button');
+                if (dismissBtn) {
+                    dismissBtn.click();
+                }
+            }
         }
     });
 });
