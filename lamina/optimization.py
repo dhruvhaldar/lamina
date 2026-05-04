@@ -80,9 +80,9 @@ def calculate_safety_factor(laminate, load, limits):
     # Replace with an efficient fast path based on physical properties (A >= 0).
     sqrt_delta = np.sqrt(delta)
 
-    if np.all(A >= 1e-10):
+    if A.min() >= 1e-10:
         f1_quad = (-B + sqrt_delta) / (2 * A)
-        return np.min(f1_quad)
+        return f1_quad.min()
 
     # Slow path with explicit context manager for edge cases where A ~ 0
     with np.errstate(divide='ignore', invalid='ignore'):
@@ -95,7 +95,7 @@ def calculate_safety_factor(laminate, load, limits):
 
         f_all = np.where(mask, f_lin, f1_quad)
 
-    return np.min(f_all)
+    return f_all.min()
 
 class GeneticAlgorithm:
     def __init__(self, material, load, constraints, population_size=20, generations=10):
