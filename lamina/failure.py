@@ -152,7 +152,7 @@ class FailureCriterion:
                              np.where(B > 0, f_lin, np.inf),
                              f1_quad)
 
-        min_factor = np.min(f_all, axis=0)
+        min_factor = f_all.min(axis=0)
 
         valid_points = min_factor != np.inf
         final_sx = sx_unit[valid_points] * min_factor[valid_points]
@@ -188,7 +188,7 @@ class FailureCriterion:
         with np.errstate(divide='ignore', invalid='ignore'):
             f_all = np.where(term > 0, np.sqrt(1.0/term), np.inf)
 
-        min_factor = np.min(f_all, axis=0)
+        min_factor = f_all.min(axis=0)
 
         valid_points = min_factor != np.inf
         final_sx = sx_unit[valid_points] * min_factor[valid_points]
@@ -219,7 +219,7 @@ class FailureCriterion:
             f_t12 = S / np.abs(t12_all)
 
         f_all = np.minimum(f_s1, np.minimum(f_s2, f_t12))
-        min_factor = np.min(f_all, axis=0)
+        min_factor = f_all.min(axis=0)
 
         valid_points = min_factor != np.inf
         final_sx = sx_unit[valid_points] * min_factor[valid_points]

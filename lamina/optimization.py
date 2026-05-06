@@ -15,13 +15,28 @@ def calculate_safety_factor(laminate, load, limits):
     ABD_inv = laminate.abd
 
     # Optimization: Algebraic expansion of matrix multiplication avoids array allocation overhead
-    eps0_x = ABD_inv[0,0]*Nx + ABD_inv[0,1]*Ny + ABD_inv[0,2]*Nxy
-    eps0_y = ABD_inv[1,0]*Nx + ABD_inv[1,1]*Ny + ABD_inv[1,2]*Nxy
-    eps0_xy = ABD_inv[2,0]*Nx + ABD_inv[2,1]*Ny + ABD_inv[2,2]*Nxy
+    eps0_x = ABD_inv[0,0]*Nx
+    eps0_y = ABD_inv[1,0]*Nx
+    eps0_xy = ABD_inv[2,0]*Nx
+    kap_x = ABD_inv[3,0]*Nx
+    kap_y = ABD_inv[4,0]*Nx
+    kap_xy = ABD_inv[5,0]*Nx
 
-    kap_x = ABD_inv[3,0]*Nx + ABD_inv[3,1]*Ny + ABD_inv[3,2]*Nxy
-    kap_y = ABD_inv[4,0]*Nx + ABD_inv[4,1]*Ny + ABD_inv[4,2]*Nxy
-    kap_xy = ABD_inv[5,0]*Nx + ABD_inv[5,1]*Ny + ABD_inv[5,2]*Nxy
+    if Ny != 0:
+        eps0_x += ABD_inv[0,1]*Ny
+        eps0_y += ABD_inv[1,1]*Ny
+        eps0_xy += ABD_inv[2,1]*Ny
+        kap_x += ABD_inv[3,1]*Ny
+        kap_y += ABD_inv[4,1]*Ny
+        kap_xy += ABD_inv[5,1]*Ny
+
+    if Nxy != 0:
+        eps0_x += ABD_inv[0,2]*Nxy
+        eps0_y += ABD_inv[1,2]*Nxy
+        eps0_xy += ABD_inv[2,2]*Nxy
+        kap_x += ABD_inv[3,2]*Nxy
+        kap_y += ABD_inv[4,2]*Nxy
+        kap_xy += ABD_inv[5,2]*Nxy
 
     Xt = limits['xt']
     Xc = limits['xc']
@@ -62,7 +77,7 @@ def calculate_safety_factor(laminate, load, limits):
 
     e1 = c2 * ex + s2 * ey + cs * gxy
     e2 = s2 * ex + c2 * ey - cs * gxy
-    g12 = -2*cs * ex + 2*cs * ey + (c2 - s2) * gxy
+    g12 = 2*cs * (ey - ex) + (c2 - s2) * gxy
 
     # Use laminate.material.Q() (Material Q matrix is constant)
     Q = laminate.material.Q()
@@ -80,7 +95,8 @@ def calculate_safety_factor(laminate, load, limits):
     # Replace with an efficient fast path based on physical properties (A >= 0).
     sqrt_delta = np.sqrt(delta)
 
-    if A.min() >= 1e-10:
+    A_min = A.min()
+    if A_min >= 1e-10:
         f1_quad = (-B + sqrt_delta) / (2 * A)
         return f1_quad.min()
 
