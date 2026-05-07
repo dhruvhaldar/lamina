@@ -150,14 +150,18 @@ class Laminate:
         # This replaces broadcasting which creates large temporary arrays (3, 3, N)
         # and leverages optimized BLAS routines (reshape(9, N) @ (N,)).
         # Native np.dot is faster than the @ operator for flat vector multiplication.
+        self.A = np.dot(Q_bars_flat, h).reshape(3, 3)
+        self.B = 0.5 * np.dot(Q_bars_flat, h2).reshape(3, 3)
+        self.D = (1/3) * np.dot(Q_bars_flat, h3).reshape(3, 3)
 
         # ABD Matrix
+        # Optimization: Avoiding chained slice assignments with intermediate .reshape(3, 3)
+        # directly on self.ABD avoids redundant array proxy generation overhead
         self.ABD = np.empty((6, 6))
-
-        # Directly slice into pre-allocated ABD matrix to avoid intermediate 3x3 array creation overhead.
-        self.A = self.ABD[:3, :3] = np.dot(Q_bars_flat, h).reshape(3, 3)
-        self.B = self.ABD[:3, 3:] = self.ABD[3:, :3] = 0.5 * np.dot(Q_bars_flat, h2).reshape(3, 3)
-        self.D = self.ABD[3:, 3:] = (1/3) * np.dot(Q_bars_flat, h3).reshape(3, 3)
+        self.ABD[:3, :3] = self.A
+        self.ABD[:3, 3:] = self.B
+        self.ABD[3:, :3] = self.B
+        self.ABD[3:, 3:] = self.D
 
         # Lazy property invalidation
         self._abd = None
@@ -258,21 +262,16 @@ class Laminate:
         Q_bar_26 = half_U2_sin2 - U3_sin4
         Q_bar_66 = U5 - U3_cos4
 
-        # Optimization: Directly populate and return flat array (9, N) to avoid
-        # 3x3xN array construction and subsequent .reshape(9, -1) overhead
-        n = c.size if np.ndim(c) > 0 else 1
-        res = np.empty((9, n))
-        res[0] = Q_bar_11
-        res[1] = Q_bar_12
-        res[2] = Q_bar_16
-        res[3] = Q_bar_12
-        res[4] = Q_bar_22
-        res[5] = Q_bar_26
-        res[6] = Q_bar_16
-        res[7] = Q_bar_26
-        res[8] = Q_bar_66
+        # Optimization: Returning a constructed array instead of allocating via np.empty
+        # and assigning row by row reduces redundant operations and array subset assignments
+        res = np.array([
+            Q_bar_11, Q_bar_12, Q_bar_16,
+            Q_bar_12, Q_bar_22, Q_bar_26,
+            Q_bar_16, Q_bar_26, Q_bar_66
+        ])
 
-        return res
+        # Ensure 2D shape (9, 1) for scalar inputs to maintain backward compatibility
+        return res if res.ndim > 1 else res[:, np.newaxis]
 
     def properties(self):
         """Returns equivalent engineering constants."""
