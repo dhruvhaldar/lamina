@@ -140,3 +140,7 @@
 ## 2026-04-20 - Global Escape Listener for Toasts
 **Learning:** Adding a dismiss button to a toast notification is not enough for good accessibility if the notification persists. Keyboard-only users face extreme friction if they have to navigate through the entire DOM to reach the dismiss button of a newly appeared notification.
 **Action:** Always provide a global `Escape` key listener to dismiss the most recent toast notification, and explicitly add `aria-keyshortcuts="Escape"` and a visual `title` hint to the dismiss button.
+
+## 2026-05-09 - Respecting OS Motion Preferences
+**Learning:** CSS animations and transitions (like sliding toasts or spinning loaders) run regardless of user preferences by default, which can trigger nausea or dizziness for users with vestibular motion disorders.
+**Action:** Always include a global `@media (prefers-reduced-motion: reduce)` block to instantly disable or minimize `animation-duration` and `transition-duration` across the app, ensuring compliance with WCAG 2.1 SC 2.3.3 (Animation from Interactions).
