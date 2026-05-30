@@ -128,6 +128,13 @@ class Laminate:
         self.rads = np.radians(angles)
         self.c = np.cos(self.rads)
         self.s = np.sin(self.rads)
+        self.c2 = self.c * self.c
+        self.s2 = self.s * self.s
+        self.cs = self.c * self.s
+
+        # Cache geometric midpoints for optimization functions
+        zk_full = self.z_coords
+        self.z_mids = (zk_full[:-1] + zk_full[1:]) / 2.0
 
         # Calculate Q_bar using precomputed trig values for performance
         # Optimization: returns (9, n_plies) array directly

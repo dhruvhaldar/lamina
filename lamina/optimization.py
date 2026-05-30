@@ -53,22 +53,31 @@ def calculate_safety_factor(laminate, load, limits):
 
     # Vectorized operations
     # Optimization: Use precomputed trig values from Laminate if available
-    if hasattr(laminate, 'c') and hasattr(laminate, 's'):
+    if hasattr(laminate, 'c2') and hasattr(laminate, 's2') and hasattr(laminate, 'cs'):
+        c2 = laminate.c2
+        s2 = laminate.s2
+        cs = laminate.cs
+    elif hasattr(laminate, 'c') and hasattr(laminate, 's'):
         c = laminate.c
         s = laminate.s
+        c2 = c * c
+        s2 = s * s
+        cs = c * s
     else:
         angles = np.array(laminate.stack)
         theta = np.radians(angles)
         c = np.cos(theta)
         s = np.sin(theta)
-
-    c2 = c * c
-    s2 = s * s
-    cs = c * s
+        c2 = c * c
+        s2 = s * s
+        cs = c * s
 
     # z coordinates (midpoints)
     # laminate.z_coords is size N+1
-    z = (laminate.z_coords[:-1] + laminate.z_coords[1:]) / 2
+    if hasattr(laminate, 'z_mids'):
+        z = laminate.z_mids
+    else:
+        z = (laminate.z_coords[:-1] + laminate.z_coords[1:]) / 2
 
     # Optimization: direct component addition instead of allocating a large 3xN broadcast array
     ex = eps0_x + kap_x * z
