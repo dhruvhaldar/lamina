@@ -41,6 +41,7 @@ async def validation_exception_handler(request, exc):
 
 # Pydantic models
 class MaterialModel(BaseModel):
+    model_config = {"extra": "forbid"}
     E1: float
     E2: float
     G12: float
@@ -83,6 +84,7 @@ class MaterialModel(BaseModel):
         return self
 
 class LaminateModel(BaseModel):
+    model_config = {"extra": "forbid"}
     material: MaterialModel
     stack: List[float]
     symmetry: bool = False
@@ -123,6 +125,7 @@ class LaminateModel(BaseModel):
         return v
 
 class LimitsModel(BaseModel):
+    model_config = {"extra": "forbid"}
     xt: float
     xc: float
     yt: float
@@ -139,6 +142,7 @@ class LimitsModel(BaseModel):
         return v
 
 class FailureRequest(BaseModel):
+    model_config = {"extra": "forbid"}
     laminate: LaminateModel
     limits: LimitsModel
 
