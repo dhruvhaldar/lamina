@@ -3,9 +3,23 @@ from starlette.types import ASGIApp, Scope, Receive, Send, Message
 from fastapi import Request, Response
 import time
 
+from fastapi.responses import JSONResponse
+
+import logging
+
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
-        response = await call_next(request)
+        try:
+            response = await call_next(request)
+        except Exception as e:
+            # Log the error so it's not silently swallowed
+            logging.exception("Unhandled exception in application")
+
+            # Prevent 500 errors from bypassing security headers and leaking stack traces
+            response = JSONResponse(
+                status_code=500,
+                content={"detail": "Internal Server Error"}
+            )
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains; preload"

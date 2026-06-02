@@ -115,3 +115,40 @@ def test_forged_content_length_header():
     response = client.post("/api/calculate", content=b"A"*10, headers={"Content-Length": "2000000"})
     assert response.status_code == 413
     assert response.text == "Payload Too Large"
+
+from unittest import mock
+
+def test_security_headers_on_500():
+    """
+    Test that a 500 error response still includes security headers.
+    """
+    with mock.patch("api.index.create_laminate", side_effect=Exception("Test Exception")):
+        payload = {
+            "material": {
+                "E1": 140e9,
+                "E2": 10e9,
+                "G12": 5e9,
+                "v12": 0.3,
+                "name": "Carbon/Epoxy"
+            },
+            "stack": [0, 45, -45, 90],
+            "symmetry": True,
+            "thickness": 0.125e-3
+        }
+
+        # We set raise_server_exceptions=False so the client gets the 500 response
+        # instead of pytest raising the exception directly.
+        from fastapi.testclient import TestClient
+        from api.index import app
+
+        test_client = TestClient(app, raise_server_exceptions=False)
+        response = test_client.post("/api/calculate", json=payload)
+
+        assert response.status_code == 500
+        headers = response.headers
+
+        assert "X-Content-Type-Options" in headers
+        assert headers["X-Content-Type-Options"] == "nosniff"
+
+        assert "Content-Security-Policy" in headers
+        assert "default-src 'self'" in headers["Content-Security-Policy"]
