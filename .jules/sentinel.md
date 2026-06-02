@@ -6,3 +6,8 @@
 **Vulnerability:** Pydantic models lacked strict validation for extra fields, potentially allowing attackers to send massive or unexpected payloads to exhaust server resources or bypass validation logic.
 **Learning:** By default, Pydantic ignores extra fields in models. This can lead to unexpected behavior or security issues if the API processes or stores these fields later.
 **Prevention:** Add `model_config = {"extra": "forbid"}` to all Pydantic models to strictly enforce the expected schema and reject any requests containing extra fields.
+
+## 2026-06-02 - [Security Headers Bypass on 500 Errors]
+**Vulnerability:** The application used FastAPI's `BaseHTTPMiddleware` to append security headers (CSP, HSTS, X-Frame-Options) to all responses. However, if an unhandled exception occurred in an endpoint, it bubbled up through `call_next()`, skipping the header appending logic. The top-level ASGI exception handler would then return a 500 error response without any security headers, potentially exposing the error page to clickjacking or cross-site scripting (if default error pages reflect input).
+**Learning:** In Starlette/FastAPI, `BaseHTTPMiddleware` is bypassed when an exception propagates upwards.
+**Prevention:** Wrap `await call_next(request)` in a `try...except Exception as e:` block. Log the error properly (`logging.exception`) and construct a generic 500 JSON response within the exception block. This guarantees a valid response object is created and security headers are consistently appended to all responses, including server crashes.
