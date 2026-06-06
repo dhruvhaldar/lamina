@@ -144,3 +144,7 @@
 ## 2026-05-09 - Respecting OS Motion Preferences
 **Learning:** CSS animations and transitions (like sliding toasts or spinning loaders) run regardless of user preferences by default, which can trigger nausea or dizziness for users with vestibular motion disorders.
 **Action:** Always include a global `@media (prefers-reduced-motion: reduce)` block to instantly disable or minimize `animation-duration` and `transition-duration` across the app, ensuring compliance with WCAG 2.1 SC 2.3.3 (Animation from Interactions).
+
+## 2026-06-06 - Context-Aware Loading States
+**Learning:** Adding a generic white loading spinner (`<span class="spinner">`) to async buttons works well for primary action buttons with dark solid backgrounds, but becomes completely invisible to users when appended to outlined or transparent secondary buttons, breaking the visual feedback loop.
+**Action:** Always provide context-aware CSS color overrides for loading indicators based on their parent container (e.g., `.btn-secondary .spinner { border-color: ... }`) to ensure they maintain adequate contrast and visibility regardless of the button variant they are injected into.

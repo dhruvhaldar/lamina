@@ -103,6 +103,12 @@ svg {
     vertical-align: middle;
 }
 
+/* Ensure spinner is visible on outlined secondary buttons */
+.btn-secondary .spinner {
+    border-color: rgba(37, 121, 176, 0.3);
+    border-top-color: #2579b0;
+}
+
 @keyframes spin {
     to { transform: rotate(360deg); }
 }
