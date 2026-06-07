@@ -108,6 +108,14 @@ def test_invalid_content_length_header():
     assert response.status_code == 400
     assert response.text == "Invalid Content-Length"
 
+def test_negative_content_length_header():
+    """
+    Test that negative Content-Length headers are immediately rejected to prevent bypasses.
+    """
+    response = client.post("/api/calculate", content=b"A"*10, headers={"Content-Length": "-10"})
+    assert response.status_code == 400
+    assert response.text == "Invalid Content-Length"
+
 def test_forged_content_length_header():
     """
     Test that forged Content-Length headers over limit are rejected immediately.
