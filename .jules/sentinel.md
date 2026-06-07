@@ -11,3 +11,8 @@
 **Vulnerability:** The application used FastAPI's `BaseHTTPMiddleware` to append security headers (CSP, HSTS, X-Frame-Options) to all responses. However, if an unhandled exception occurred in an endpoint, it bubbled up through `call_next()`, skipping the header appending logic. The top-level ASGI exception handler would then return a 500 error response without any security headers, potentially exposing the error page to clickjacking or cross-site scripting (if default error pages reflect input).
 **Learning:** In Starlette/FastAPI, `BaseHTTPMiddleware` is bypassed when an exception propagates upwards.
 **Prevention:** Wrap `await call_next(request)` in a `try...except Exception as e:` block. Log the error properly (`logging.exception`) and construct a generic 500 JSON response within the exception block. This guarantees a valid response object is created and security headers are consistently appended to all responses, including server crashes.
+
+## 2026-06-07 - [Negative Content-Length Bypass in PayloadSizeLimitMiddleware]
+**Vulnerability:** The ASGI middleware designed to reject overly large payloads early (via the `Content-Length` header) failed to validate for negative values. An attacker sending a negative length (e.g., `Content-Length: -10`) would bypass the `int(content_length) > self.limit` check, pushing the malformed request to the downstream dynamic body reader.
+**Learning:** Early validation checks relying on numerical bounds must explicitly handle negative or physically impossible values to prevent logical bypasses.
+**Prevention:** In payload size middlewares, always add `if int(content_length) < 0` to immediately reject malformed requests with a 400 Bad Request before processing.

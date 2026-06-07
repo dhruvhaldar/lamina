@@ -100,7 +100,11 @@ class PayloadSizeLimitMiddleware:
         content_length = headers.get(b"content-length")
         if content_length:
             try:
-                if int(content_length) > self.limit:
+                length_val = int(content_length)
+                if length_val < 0:
+                    await self.send_400(send, "Invalid Content-Length")
+                    return
+                if length_val > self.limit:
                     await self.send_413(send)
                     return
             except ValueError:
