@@ -98,7 +98,8 @@ class FailureCriterion:
             gxy = eps_global[2]
 
             e1 = c**2 * ex + s**2 * ey + c*s*gxy
-            e2 = s**2 * ex + c**2 * ey - c*s*gxy
+            # Optimization: e1 + e2 = ex + ey (first strain invariant)
+            e2 = ex + ey - e1
             g12 = -2*c*s * ex + 2*c*s * ey + (c**2 - s**2) * gxy
 
             Q = laminate.material.Q()
