@@ -46,12 +46,10 @@ class FailureCriterion:
         sx_unit = np.cos(angles)
         sy_unit = np.sin(angles)
 
-        # Optimization: Only explicitly allocate the non-zero rows of the NM matrix
-        # and slice the abd matrix to avoid processing known zeros, which significantly
+        # Optimization: direct array instantiation is faster than empty+assignment.
+        # Slicing the abd matrix avoids processing known zeros, which significantly
         # reduces redundant floating-point operations during matrix multiplication.
-        NM_reduced = np.empty((2, len(angles)))
-        NM_reduced[0, :] = sx_unit * h
-        NM_reduced[1, :] = sy_unit * h
+        NM_reduced = np.array([sx_unit * h, sy_unit * h])
 
         # strain_curvature: (6, n_angles)
         strain_curvature = laminate.abd[:, :2] @ NM_reduced
@@ -59,8 +57,9 @@ class FailureCriterion:
         kappa = strain_curvature[3:, :] # (3, n_angles)
 
         # Optimization: Use precomputed K_all and K_all_z matrices from Laminate
-        # to avoid recalculating T_all matrices and K_all @ kappa for every point/loop
-        S_all = laminate.K_all @ eps0 + laminate.K_all_z @ kappa
+        # and use in-place addition to avoid intermediate array allocations.
+        S_all = laminate.K_all @ eps0
+        S_all += laminate.K_all_z @ kappa
 
         return sx_unit, sy_unit, S_all[:, 0, :], S_all[:, 1, :], S_all[:, 2, :]
 
