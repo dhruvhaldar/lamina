@@ -85,7 +85,8 @@ def calculate_safety_factor(laminate, load, limits):
     gxy = eps0_xy + kap_xy * z
 
     e1 = c2 * ex + s2 * ey + cs * gxy
-    e2 = s2 * ex + c2 * ey - cs * gxy
+    # Optimization: e1 + e2 = ex + ey (first strain invariant)
+    e2 = ex + ey - e1
     g12 = 2*cs * (ey - ex) + (c2 - s2) * gxy
 
     # Use laminate.material.Q() (Material Q matrix is constant)
