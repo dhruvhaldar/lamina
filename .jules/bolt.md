@@ -5,3 +5,7 @@
 ## 2026-06-09 - [Strain Invariant Math Optimization]
 **Learning:** When computing 2D strain or stress transformations inside tight loops (like in genetic algorithm evaluations), evaluating equations algebraically is heavily impacted by the number of operations. Computing both principal strains independently using trigonometric functions (e.g. `s^2*ex + c^2*ey - c*s*gxy`) requires redundant multiplications.
 **Action:** Exploit continuum mechanics invariants. The first strain invariant states that the trace of the strain tensor is constant under rotation (`e1 + e2 = ex + ey`). Thus, once `e1` is computed, `e2` can be derived using a simple subtraction and addition (`e2 = ex + ey - e1`), eliminating multiple floating-point multiplications and generating significant speedup.
+
+## 2026-06-11 - [Buckling Hot Loop Optimization]
+**Learning:** In performance-critical tight Python loops, explicitly unpacking arrays/tuples before the loop (e.g. `D11, D12, D22, D66 = D[0,0], D[0,1], D[1,1], D[2,2]`) and completely factoring out mathematical operations like divisions and exponentiations (e.g., using `b_a = b/a; b_a * b_a` instead of `(b/a)**2`) provides substantial cumulative speedups. Additionally, for loops with small bounded execution counts (e.g. `1` to `5`), iterating over a constant tuple `(2, 3, 4, 5)` avoids the overhead of instantiating `range()`.
+**Action:** Always pre-calculate and factor out mathematical operations from hot loops. For tight loops with small predefined bounds, replace `range()` calls with explicit tuples.
