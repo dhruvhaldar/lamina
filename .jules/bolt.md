@@ -9,3 +9,7 @@
 ## 2026-06-11 - [Buckling Hot Loop Optimization]
 **Learning:** In performance-critical tight Python loops, explicitly unpacking arrays/tuples before the loop (e.g. `D11, D12, D22, D66 = D[0,0], D[0,1], D[1,1], D[2,2]`) and completely factoring out mathematical operations like divisions and exponentiations (e.g., using `b_a = b/a; b_a * b_a` instead of `(b/a)**2`) provides substantial cumulative speedups. Additionally, for loops with small bounded execution counts (e.g. `1` to `5`), iterating over a constant tuple `(2, 3, 4, 5)` avoids the overhead of instantiating `range()`.
 **Action:** Always pre-calculate and factor out mathematical operations from hot loops. For tight loops with small predefined bounds, replace `range()` calls with explicit tuples.
+
+## $(date +%Y-%m-%d) - [In-place array operations vs Scalar assignments]
+**Learning:** Using `np.sqrt(delta, out=delta)` works securely for mutating arrays to avoid allocations, however, it crashes completely if `delta` is a NumPy scalar because scalars are immutable. Functions built to accept arrays and scalars interchangeably cannot freely use the `out=` argument without risking crashes on scalar types.
+**Action:** Always verify if a variable could be a scalar or an array in hybrid functions before applying strictly mutating Numpy functions like `np.sqrt(out=)`. For variables that might be scalar, fallback to variable reassignment (`delta = np.sqrt(delta)`), which safely handles both arrays and scalars at minimal overhead.
