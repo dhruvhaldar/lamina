@@ -91,24 +91,40 @@ def calculate_safety_factor(laminate, load, limits):
 
     # Use laminate.material.Q() (Material Q matrix is constant)
     Q = laminate.material.Q()
-    s1 = Q[0,0]*e1 + Q[0,1]*e2
-    s2 = Q[1,0]*e1 + Q[1,1]*e2
-    t12 = Q[2,2]*g12
+    Q11, Q12, Q22, Q66 = Q[0,0], Q[0,1], Q[1,1], Q[2,2]
+    s1 = Q11*e1 + Q12*e2
+    s2 = Q12*e1 + Q22*e2
+    t12 = Q66*g12
 
     # Tsai-Wu: A f^2 + B f - 1 = 0
-    A = F11*(s1*s1) + F22*(s2*s2) + F66*(t12*t12) + 2*F12*s1*s2
-    B = F1*s1 + F2*s2
+    # Optimization: Use in-place operators to avoid intermediate array allocations
+    A = s1 * s1
+    A *= F11
+    A += F22 * (s2 * s2)
+    A += F66 * (t12 * t12)
+    A += (2 * F12) * (s1 * s2)
 
-    delta = B * B + 4 * A
+    B = F1*s1
+    B += F2*s2
+
+    delta = B * B
+    A *= 4
+    delta += A
 
     # Optimization: Context manager `with np.errstate` is slow in loops.
     # Replace with an efficient fast path based on physical properties (A >= 0).
-    sqrt_delta = np.sqrt(delta)
-
     A_min = A.min()
     if A_min >= 1e-10:
-        f1_quad = (-B + sqrt_delta) / (2 * A)
-        return f1_quad.min()
+        delta = np.sqrt(delta)
+        delta -= B
+        # A is already 4*A, so (2*A_orig) corresponds to (A/2) here
+        delta *= 2
+        delta /= A
+        return delta.min()
+
+    # Revert A for the slow path to its original mathematical definition
+    A *= 0.25
+    sqrt_delta = np.sqrt(delta)
 
     # Slow path with explicit context manager for edge cases where A ~ 0
     with np.errstate(divide='ignore', invalid='ignore'):
