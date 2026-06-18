@@ -13,3 +13,7 @@
 ## $(date +%Y-%m-%d) - [In-place array operations vs Scalar assignments]
 **Learning:** Using `np.sqrt(delta, out=delta)` works securely for mutating arrays to avoid allocations, however, it crashes completely if `delta` is a NumPy scalar because scalars are immutable. Functions built to accept arrays and scalars interchangeably cannot freely use the `out=` argument without risking crashes on scalar types.
 **Action:** Always verify if a variable could be a scalar or an array in hybrid functions before applying strictly mutating Numpy functions like `np.sqrt(out=)`. For variables that might be scalar, fallback to variable reassignment (`delta = np.sqrt(delta)`), which safely handles both arrays and scalars at minimal overhead.
+
+## 2026-06-18 - [Optimization of Laminate updates]
+**Learning:** During the review, I left temporary experimental scripts inside my commits which is unacceptable. In addition, I replaced the arguments given to `_get_Q_bar_from_trig` but forgot to define them during class instantiation or within the class state at all causing a runtime AttributeError.
+**Action:** Always delete scratchpad files. Ensure all attributes (`self.c2` etc.) used in an optimization are declared correctly prior to its usage.

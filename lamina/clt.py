@@ -138,7 +138,7 @@ class Laminate:
 
         # Calculate Q_bar using precomputed trig values for performance
         # Optimization: returns (9, n_plies) array directly
-        Q_bars_flat = self._get_Q_bar_from_trig(self.c, self.s)
+        Q_bars_flat = self._get_Q_bar_from_trig(self.c2, self.s2, self.cs)
 
         # 2. Calculate thickness terms
         zk = self.z_coords[1:]
@@ -157,18 +157,24 @@ class Laminate:
         # This replaces broadcasting which creates large temporary arrays (3, 3, N)
         # and leverages optimized BLAS routines (reshape(9, N) @ (N,)).
         # Native np.dot is faster than the @ operator for flat vector multiplication.
-        self.A = np.dot(Q_bars_flat, h).reshape(3, 3)
-        self.B = 0.5 * np.dot(Q_bars_flat, h2).reshape(3, 3)
-        self.D = (1/3) * np.dot(Q_bars_flat, h3).reshape(3, 3)
+        A_flat = np.dot(Q_bars_flat, h)
+        B_flat = np.dot(Q_bars_flat, h2)
+        B_flat *= 0.5
+        D_flat = np.dot(Q_bars_flat, h3)
+        D_flat *= (1/3)
+
+        self.A = A_flat.reshape(3, 3)
+        self.B = B_flat.reshape(3, 3)
+        self.D = D_flat.reshape(3, 3)
 
         # ABD Matrix
         # Optimization: Avoiding chained slice assignments with intermediate .reshape(3, 3)
         # directly on self.ABD avoids redundant array proxy generation overhead
         self.ABD = np.empty((6, 6))
-        self.ABD[:3, :3] = self.A
-        self.ABD[:3, 3:] = self.B
-        self.ABD[3:, :3] = self.B
-        self.ABD[3:, 3:] = self.D
+        self.ABD[:3, :3].flat = A_flat
+        self.ABD[:3, 3:].flat = B_flat
+        self.ABD[3:, :3].flat = B_flat
+        self.ABD[3:, 3:].flat = D_flat
 
         # Lazy property invalidation
         self._abd = None
@@ -236,31 +242,37 @@ class Laminate:
         theta = np.radians(angle_deg)
         c = np.cos(theta)
         s = np.sin(theta)
-        q_bar_flat = self._get_Q_bar_from_trig(c, s)
+        c2 = c * c
+        s2 = s * s
+        cs = c * s
+        q_bar_flat = self._get_Q_bar_from_trig(c2, s2, cs)
         if np.ndim(angle_deg) == 0:
             return q_bar_flat.reshape(3, 3)
         return q_bar_flat.reshape(3, 3, -1)
 
-    def _get_Q_bar_from_trig(self, c, s):
+    def _get_Q_bar_from_trig(self, c2, s2, cs):
         """
-        Calculate transformed stiffness matrix Q_bar using precomputed cos(theta) and sin(theta).
+        Calculate transformed stiffness matrix Q_bar using precomputed squared and product trig values.
         Avoids recomputing trig functions and uses double-angle identities.
         """
         # Use invariants for faster calculation
         U1, U2, U3, U4, U5 = self.material.invariants
 
-        # Calculate double angles from single angles
+        # Calculate double angles from pre-squared trig values
         # Optimization: Pre-compute repetitive array multiplications to reduce allocation overhead
-        cos2 = c*c - s*s
-        sin2 = 2 * c * s
+        cos2 = c2 - s2
+        sin2 = cs * 2.0
 
-        cos4 = cos2*cos2 - sin2*sin2
-        sin4 = 2 * cos2 * sin2
+        cos4 = cos2*cos2
+        cos4 -= sin2*sin2
 
-        U2_cos2 = U2 * cos2
-        U3_cos4 = U3 * cos4
-        half_U2_sin2 = 0.5 * U2 * sin2
-        U3_sin4 = U3 * sin4
+        sin4 = cos2 * sin2
+        sin4 *= 2.0
+
+        U2_cos2 = cos2 * U2
+        U3_cos4 = cos4 * U3
+        half_U2_sin2 = sin2 * (0.5 * U2)
+        U3_sin4 = sin4 * U3
 
         Q_bar_11 = U1 + U2_cos2 + U3_cos4
         Q_bar_12 = U4 - U3_cos4
