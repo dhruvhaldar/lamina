@@ -70,10 +70,17 @@ function initStackPreview() {
         const rawPlies = stackStr.split(/[\s,]+/).filter(s => s !== '');
 
         if (rawPlies.length === 0) {
-            preview.textContent = 'Stack cannot be empty';
-            preview.style.color = '#c0392b';
-            stackInput.setAttribute('aria-invalid', 'true');
-            stackInput.setCustomValidity('Stack cannot be empty');
+            if (stackStr.trim() === '') {
+                preview.textContent = 'Required';
+                preview.style.color = '#c0392b';
+                stackInput.setAttribute('aria-invalid', 'true');
+                stackInput.setCustomValidity(''); // Let native 'required' handle it
+            } else {
+                preview.textContent = 'Stack cannot be empty';
+                preview.style.color = '#c0392b';
+                stackInput.setAttribute('aria-invalid', 'true');
+                stackInput.setCustomValidity('Stack cannot be empty');
+            }
             return;
         }
 
@@ -152,7 +159,17 @@ function initInputPreviews() {
 
         const update = () => {
             const val = parseFloat(input.value);
-            if (isNaN(val)) {
+            if (input.validity.badInput) {
+                preview.textContent = 'Invalid number';
+                preview.style.color = '#c0392b';
+                input.setAttribute('aria-invalid', 'true');
+                input.setCustomValidity('Invalid number');
+            } else if (input.value === '') {
+                preview.textContent = 'Required';
+                preview.style.color = '#c0392b';
+                input.setAttribute('aria-invalid', 'true');
+                input.setCustomValidity(''); // Let native 'required' handle it
+            } else if (isNaN(val)) {
                 preview.textContent = 'Invalid number';
                 preview.style.color = '#c0392b';
                 input.setAttribute('aria-invalid', 'true');
