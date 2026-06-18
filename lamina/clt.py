@@ -144,13 +144,14 @@ class Laminate:
         zk = self.z_coords[1:]
         zk_1 = self.z_coords[:-1]
 
-        # Optimization: algebraically reducing h2 and h3 terms into differences of
-        # squares/cubes and using np.square() minimizes intermediate array operations
-        zk_sq = np.square(zk)
-        zk_1_sq = np.square(zk_1)
+        # Optimization: algebraically factoring common terms for h2 and h3
+        # h2 = zk^2 - zk_1^2 = (zk - zk_1)(zk + zk_1) = h * sum_z
+        # h3 = zk^3 - zk_1^3 = (zk - zk_1)(zk^2 + zk*zk_1 + zk_1^2) = h * (sum_z^2 - zk*zk_1)
+        # This replaces multiple calls to np.square() and minimizes element-wise array operations
         h = zk - zk_1
-        h2 = zk_sq - zk_1_sq
-        h3 = zk_sq * zk - zk_1_sq * zk_1
+        sum_z = zk + zk_1
+        h2 = h * sum_z
+        h3 = h * (sum_z * sum_z - zk * zk_1)
 
         # 3. Sum over plies (axis 2)
         # Optimization: Use dot product for A, B, and D matrices.
