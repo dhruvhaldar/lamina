@@ -148,3 +148,7 @@
 ## 2026-06-06 - Context-Aware Loading States
 **Learning:** Adding a generic white loading spinner (`<span class="spinner">`) to async buttons works well for primary action buttons with dark solid backgrounds, but becomes completely invisible to users when appended to outlined or transparent secondary buttons, breaking the visual feedback loop.
 **Action:** Always provide context-aware CSS color overrides for loading indicators based on their parent container (e.g., `.btn-secondary .spinner { border-color: ... }`) to ensure they maintain adequate contrast and visibility regardless of the button variant they are injected into.
+
+## 2026-06-18 - Distinguishing Empty from Invalid Inputs
+**Learning:** In real-time inline validation, treating an empty input identical to a malformed input (e.g. `NaN`) creates a frustrating experience. It triggers aggressive error messages ("Invalid number") simply because the user clears the field to type a new one, conflicting with the native `required` HTML5 constraint.
+**Action:** When performing custom real-time validation, explicitly check for `input.validity.badInput` to catch truly unparseable data, and explicitly handle `input.value === ''` or `string.trim() === ''`. For empty values, provide a gentle "Required" hint and clear any `setCustomValidity` strings so the browser's native `required` mechanism can gracefully handle the empty state on submission.
