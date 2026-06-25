@@ -132,11 +132,19 @@ class FailureCriterion:
 
         sx_unit, sy_unit, s1_all, s2_all, t12_all = FailureCriterion._get_stresses_vectorized(laminate, angles, h)
 
-        # Optimization: use np.square() to bypass the operator overhead of **2
-        A = F11*np.square(s1_all) + F22*np.square(s2_all) + F66*np.square(t12_all) + 2*F12*s1_all*s2_all
-        B = F1*s1_all + F2*s2_all
+        # Optimization: Evaluating multi-term equations via chained in-place operations avoids
+        # intermediate array allocations and provides significant performance improvements
+        A = s1_all * s1_all
+        A *= F11
+        A += F22 * (s2_all * s2_all)
+        A += F66 * (t12_all * t12_all)
+        A += (2 * F12) * (s1_all * s2_all)
 
-        delta = np.square(B) + 4 * A
+        B = F1 * s1_all
+        B += F2 * s2_all
+
+        delta = B * B
+        delta += 4 * A
 
         with np.errstate(divide='ignore', invalid='ignore'):
             # Optimization: Mathematically, A is always non-negative because the
@@ -179,14 +187,18 @@ class FailureCriterion:
 
         # Optimization: Branchless vectorized execution inside np.errstate
         # avoids explicit boolean array masking and subset assignments.
-        # Direct np.square and pre-computed terms reduce redundant allocations.
+        # Direct algebraic expansion with in-place operations avoids np.square() overhead.
         s1_X = s1_all / X
         s2_Y = s2_all / Y
         t12_S = t12_all / S
-        term = np.square(s1_X) - s1_X * (s2_all / X) + np.square(s2_Y) + np.square(t12_S)
+
+        term = s1_X * s1_X
+        term -= s1_X * (s2_all / X)
+        term += s2_Y * s2_Y
+        term += t12_S * t12_S
 
         with np.errstate(divide='ignore', invalid='ignore'):
-            f_all = np.where(term > 0, np.sqrt(1.0/term), np.inf)
+            f_all = 1.0 / np.sqrt(np.abs(term))
 
         min_factor = f_all.min(axis=0)
 
