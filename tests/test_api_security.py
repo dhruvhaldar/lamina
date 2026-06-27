@@ -160,3 +160,40 @@ def test_security_headers_on_500():
 
         assert "Content-Security-Policy" in headers
         assert "default-src 'self'" in headers["Content-Security-Policy"]
+
+def test_loc_key_truncation_dos():
+    """
+    Test that massive field names in request body are truncated in error response
+    to prevent Reflected DoS and memory exhaustion.
+    """
+    from fastapi.testclient import TestClient
+    from api.index import app
+    client = TestClient(app)
+
+    massive_key = "A" * 10000
+    payload = {
+        "material": {
+            "E1": 140e9,
+            "E2": 10e9,
+            "G12": 5e9,
+            "v12": 0.3,
+            "name": "Custom",
+            massive_key: "unexpected_field"
+        },
+        "stack": [0, 45, -45, 90],
+        "thickness": 0.001
+    }
+
+    response = client.post("/api/calculate", json=payload)
+    assert response.status_code == 422
+
+    # Assert that no item in the detail 'loc' array is insanely long
+    data = response.json()
+    errors = data.get("detail", [])
+
+    assert len(errors) > 0
+    for err in errors:
+        loc = err.get("loc", [])
+        for item in loc:
+            if isinstance(item, str):
+                assert len(item) <= 53  # 50 chars + "..."
