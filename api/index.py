@@ -30,6 +30,13 @@ async def validation_exception_handler(request, exc):
         error.pop('input', None)
         error.pop('url', None)
 
+        # Truncate overly long keys in 'loc' to prevent Reflected DoS via massive undocumented field names
+        if 'loc' in error:
+            error['loc'] = tuple(
+                item[:50] + "..." if isinstance(item, str) and len(item) > 50 else item
+                for item in error['loc']
+            )
+
         # Ensure ctx values (like ValueError) are converted to string to prevent JSON errors
         if 'ctx' in error and 'error' in error['ctx']:
             error['ctx']['error'] = str(error['ctx']['error'])
